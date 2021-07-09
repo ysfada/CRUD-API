@@ -1,0 +1,21 @@
+Merhabalar, bu projede sizden beklentimiz Entity Framework Core kullanarak veritabaný oluþturmanýz ve veritabanýnda EF Core ile CRUD iþlemleri yapmanýz. 
+
+Gerekli register ve config iþlemlerini hazýrladým. Sizin yapmanýz gereken Migration oluþturmak ve database create etmek. 
+
+Örnek olarak customer modeli oluþturup get metodunu hazýrladým. 
+
+Öncelikle Product modeli oluþturup CRUD iþlemlerini halletmeniz gerekiyor. 
+
+Ardýndan Order modeli oluþturup x müþterisi y ürününü satýn aldýðý bilgisini Order tablosuna yazacak þekilde bir kurgu yapabilirsiniz.
+
+Yani özetlemek gerekirse ;
+ * Customer CRUD 
+ * Product CRUD
+ * Order CRUD (CustomerId,ProductId, Count gibi properyler olmasý yeterli)
+
+ Önyüzde de bunlarýn basit formlarý olacak þekilde hazýrlamanýzý bekliyoruz. Frontend olarak VueJS kullanmanýz gerekiyor.
+
+ X müþterisine satýn alma iþlemi yaparken dropdowndan seçtirebilirsiniz. Yani customer dropdownu , product table (yanýnda bir buton olup satýn al dediðimizde order'a yazacak gibi.)
+
+ Son olarakta basit tablo ile x müþterisi x ürünü þu kadar adet olarak aldý gibi tabloda görmemiz gerekiyor.
+
