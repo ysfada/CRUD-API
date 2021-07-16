@@ -1,14 +1,14 @@
 ﻿using Application.Customers.Model;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Customers.Services
 {
-    public interface ICustomerService
-    {
-        List<CustomerDto> GetCustomers();
-    }
+	public interface ICustomerService
+	{
+		CustomerDto GetCustomerById(int id);
+		List<CustomerDto> GetCustomers();
+		CustomerDto CreateCustomer(CreateCustomerDto customer);
+		int UpdateCustomer(int id, UpdateCustomerDto customer);
+		int DeleteCustomer(int id);
+	}
 }
