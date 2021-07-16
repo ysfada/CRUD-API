@@ -1,23 +1,23 @@
 ﻿using System;
-using Application.Customers.Model;
-using Application.Customers.Services;
+using Application.Products.Model;
 using Microsoft.AspNetCore.Mvc;
+using Application.Products.Services;
 
 namespace Api.Controllers
 {
-	public class CustomerController : BaseController
+	public class ProductController : BaseController
 	{
-		private readonly ICustomerService _customerService;
+		private readonly IProductService _productService;
 
-		public CustomerController(ICustomerService customerService)
+		public ProductController(IProductService productService)
 		{
-			_customerService = customerService;
+			_productService = productService;
 		}
 
 		[HttpGet("{id:int}")]
 		public IActionResult Get(int id)
 		{
-			var data = _customerService.GetCustomerById(id);
+			var data = _productService.GetProductById(id);
 			if (data is null)
 			{
 				return NotFound();
@@ -29,16 +29,16 @@ namespace Api.Controllers
 		[HttpGet]
 		public IActionResult GetAll()
 		{
-			var data = _customerService.GetCustomers();
+			var data = _productService.GetProducts();
 			return Ok(data);
 		}
 
 		[HttpPost]
-		public IActionResult Create(CreateCustomerDto customer)
+		public IActionResult Create(CreateProductDto product)
 		{
 			// TODO: validate input and return appropriate status code
 
-			var data = _customerService.CreateCustomer(customer);
+			var data = _productService.CreateProduct(product);
 			if (data is null)
 			{
 				return BadRequest();
@@ -48,11 +48,11 @@ namespace Api.Controllers
 		}
 
 		[HttpPut("{id:int}")]
-		public IActionResult Update(int id, UpdateCustomerDto customer)
+		public IActionResult Update(int id, UpdateProductDto product)
 		{
 			// TODO: validate input and return appropriate status code
 
-			var done = _customerService.UpdateCustomer(id, customer);
+			var done = _productService.UpdateProduct(id, product);
 			if (done < 0)
 			{
 				return BadRequest();
@@ -66,7 +66,7 @@ namespace Api.Controllers
 		{
 			// TODO: validate input and return appropriate status code
 
-			var done = _customerService.DeleteCustomer(id);
+			var done = _productService.DeleteProduct(id);
 			if (done < 0)
 			{
 				return BadRequest();
