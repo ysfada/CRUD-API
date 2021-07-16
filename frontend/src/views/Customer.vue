@@ -42,13 +42,13 @@
                   </v-col>
                   <v-col cols="12" sm="6" md="4">
                     <v-text-field
-                      v-model="editedCustomer.first_name"
+                      v-model="editedCustomer.firstName"
                       label="First name"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="12" sm="6" md="4">
                     <v-text-field
-                      v-model="editedCustomer.last_name"
+                      v-model="editedCustomer.lastName"
                       label="Last name"
                     ></v-text-field>
                   </v-col>
@@ -88,13 +88,11 @@
       </v-icon>
       <v-icon small @click="deleteCustomer(item)"> mdi-delete </v-icon>
     </template>
-    <template v-slot:no-data>
-      <v-btn color="primary" @click="mock"> Reset </v-btn>
-    </template>
   </v-data-table>
 </template>
 
 <script lang="ts">
+import useCustomer from "@/composables/useCustomer";
 import {
   computed,
   defineComponent,
@@ -103,90 +101,45 @@ import {
   ref,
   watch,
 } from "@vue/composition-api";
-import { ICustomer } from "../@types/customer";
+import {
+  ICreateCustomer,
+  ICustomer,
+  IUpdateCustomer,
+} from "../@types/customer";
 
 export default defineComponent({
   setup() {
+    const {
+      getAllCustomers,
+      deleteCustomerById,
+      updateCustomer,
+      createCustomer,
+    } = useCustomer();
     const dialog = ref(false);
     const dialogDelete = ref(false);
     const search = ref("");
     const headers = ref([
       { text: "Id", align: "start", value: "id" },
-      { text: "First name", value: "first_name" },
-      { text: "Last name", value: "last_name" },
+      { text: "First name", value: "firstName" },
+      { text: "Last name", value: "lastName" },
       { text: "Actions", value: "actions", sortable: false },
     ]);
     const customers = ref<ICustomer[]>([]);
     const editedIndex = ref(-1);
     const editedCustomer = ref<ICustomer>({
       id: 0,
-      first_name: "",
-      last_name: "",
+      firstName: "",
+      lastName: "",
     });
     const defaultCustomer = ref<ICustomer>({
       id: 0,
-      first_name: "",
-      last_name: "",
+      firstName: "",
+      lastName: "",
     });
 
     const formTitle = computed(() =>
       editedIndex.value === -1 ? "New Customer" : "Edit Customer"
     );
-
-    const mock = () => {
-      customers.value = [
-        {
-          id: 1,
-          first_name: "first name 1",
-          last_name: "last name 1",
-        },
-        {
-          id: 2,
-          first_name: "first name 2",
-          last_name: "last name 2",
-        },
-        {
-          id: 3,
-          first_name: "first name 3",
-          last_name: "last name 3",
-        },
-        {
-          id: 4,
-          first_name: "first name 4",
-          last_name: "last name 4",
-        },
-        {
-          id: 5,
-          first_name: "first name 5",
-          last_name: "last name 5",
-        },
-        {
-          id: 6,
-          first_name: "first name 6",
-          last_name: "last name 6",
-        },
-        {
-          id: 7,
-          first_name: "first name 7",
-          last_name: "last name 7",
-        },
-        {
-          id: 8,
-          first_name: "first name 8",
-          last_name: "last name 8",
-        },
-        {
-          id: 9,
-          first_name: "first name 9",
-          last_name: "last name 9",
-        },
-        {
-          id: 10,
-          first_name: "first name 10",
-          last_name: "last name 10",
-        },
-      ];
-    };
 
     const editCustomer = (customer: ICustomer) => {
       editedIndex.value = customers.value.indexOf(customer);
@@ -200,8 +153,18 @@ export default defineComponent({
       dialogDelete.value = true;
     };
 
-    const deleteCustomerConfirm = () => {
-      customers.value.splice(editedIndex.value, 1);
+    const deleteCustomerConfirm = async () => {
+      try {
+        const response = await deleteCustomerById(editedCustomer.value.id);
+        if (response.ok) {
+          customers.value.splice(editedIndex.value, 1);
+        } else {
+          // TODO: handle 4xx, 3xx
+        }
+      } catch (error) {
+        error(error);
+      }
+
       closeDelete();
     };
 
@@ -221,16 +184,68 @@ export default defineComponent({
       });
     };
 
-    const save = () => {
+    const save = async () => {
+      // TODO validate data
+      if (
+        editedCustomer.value.firstName.length < 1 ||
+        editedCustomer.value.lastName.length < 1
+      )
+        return;
+
       if (editedIndex.value > -1) {
-        Object.assign(customers.value[editedIndex.value], editedCustomer.value);
+        try {
+          const body: IUpdateCustomer = {
+            firstName: editedCustomer.value.firstName,
+            lastName: editedCustomer.value.lastName,
+          };
+          const response = await updateCustomer(editedCustomer.value.id, body);
+
+          if (response.ok) {
+            Object.assign(
+              customers.value[editedIndex.value],
+              editedCustomer.value
+            );
+            dialog.value = true;
+          } else {
+            // TODO: handle 4xx, 3xx
+          }
+        } catch (error) {
+          error(error);
+        }
       } else {
-        customers.value.push(editedCustomer.value);
+        try {
+          const body: ICreateCustomer = {
+            firstName: editedCustomer.value.firstName,
+            lastName: editedCustomer.value.lastName,
+          };
+          const response = await createCustomer(body);
+          if (response.ok) {
+            customers.value.push(await response.json());
+          } else {
+            // TODO: handle 4xx, 3xx
+          }
+        } catch (error) {
+          error(error);
+        }
       }
+
       close();
     };
 
-    onBeforeMount(mock);
+    const getCustomers = async () => {
+      try {
+        const response = await getAllCustomers();
+        if (response.ok) {
+          customers.value = await response.json();
+        } else {
+          // TODO: handle 4xx, 3xx
+        }
+      } catch (error) {
+        error(error);
+      }
+    };
+
+    onBeforeMount(getCustomers);
 
     watch(dialog, (val) => {
       val || close();
@@ -250,7 +265,6 @@ export default defineComponent({
       editedCustomer,
       defaultCustomer,
       formTitle,
-      mock,
       editCustomer,
       deleteCustomer,
       deleteCustomerConfirm,

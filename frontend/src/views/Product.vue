@@ -42,7 +42,7 @@
                   </v-col>
                   <v-col cols="12" sm="6" md="4">
                     <v-text-field
-                      v-model="editedProduct.product_name"
+                      v-model="editedProduct.productName"
                       label="Product name"
                     ></v-text-field>
                   </v-col>
@@ -88,13 +88,11 @@
       </v-icon>
       <v-icon small @click="deleteProduct(item)"> mdi-delete </v-icon>
     </template>
-    <template v-slot:no-data>
-      <v-btn color="primary" @click="mock"> Reset </v-btn>
-    </template>
   </v-data-table>
 </template>
 
 <script lang="ts">
+import useProduct from "@/composables/useProduct";
 import {
   computed,
   defineComponent,
@@ -103,16 +101,18 @@ import {
   ref,
   watch,
 } from "@vue/composition-api";
-import { IProduct } from "../@types/product";
+import { ICreateProduct, IProduct, IUpdateProduct } from "../@types/product";
 
 export default defineComponent({
   setup() {
+    const { deleteProductById, updateProduct, createProduct, getAllProducts } =
+      useProduct();
     const dialog = ref(false);
     const dialogDelete = ref(false);
     const search = ref("");
     const headers = ref([
       { text: "Id", align: "start", value: "id" },
-      { text: "Product name", value: "product_name" },
+      { text: "Product name", value: "productName" },
       { text: "Price", value: "price" },
       { text: "Actions", value: "actions", sortable: false },
     ]);
@@ -120,73 +120,18 @@ export default defineComponent({
     const editedIndex = ref(-1);
     const editedProduct = ref<IProduct>({
       id: 0,
-      product_name: "",
+      productName: "",
       price: 0,
     });
     const defaultCustomer = ref<IProduct>({
       id: 0,
-      product_name: "",
+      productName: "",
       price: 0,
     });
 
     const formTitle = computed(() =>
       editedIndex.value === -1 ? "New Product" : "Edit Product"
     );
-
-    const mock = () => {
-      products.value = [
-        {
-          id: 1,
-          product_name: "product 1",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 2,
-          product_name: "product 2",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 3,
-          product_name: "product 3",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 4,
-          product_name: "product 4",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 5,
-          product_name: "product 5",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 6,
-          product_name: "product 6",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 7,
-          product_name: "product 7",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 8,
-          product_name: "product 8",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 9,
-          product_name: "product 9",
-          price: Math.floor(Math.random() * 100),
-        },
-        {
-          id: 10,
-          product_name: "product 10",
-          price: Math.floor(Math.random() * 100),
-        },
-      ];
-    };
 
     const editProduct = (product: IProduct) => {
       editedIndex.value = products.value.indexOf(product);
@@ -200,8 +145,19 @@ export default defineComponent({
       dialogDelete.value = true;
     };
 
-    const deleteProductConfirm = () => {
-      products.value.splice(editedIndex.value, 1);
+    const deleteProductConfirm = async () => {
+      try {
+        const response = await deleteProductById(editedProduct.value.id);
+        if (response.ok) {
+          products.value.splice(editedIndex.value, 1);
+          closeDelete();
+        } else {
+          // TODO: handle 4xx, 3xx
+        }
+      } catch (error) {
+        error(error);
+      }
+
       closeDelete();
     };
 
@@ -221,16 +177,68 @@ export default defineComponent({
       });
     };
 
-    const save = () => {
+    const save = async () => {
+      // TODO validate data
+      if (
+        editedProduct.value.productName.length < 1 ||
+        editedProduct.value.price < 0
+      )
+        return;
+
       if (editedIndex.value > -1) {
-        Object.assign(products.value[editedIndex.value], editedProduct.value);
+        try {
+          const body: IUpdateProduct = {
+            productName: editedProduct.value.productName,
+            price: editedProduct.value.price,
+          };
+          const response = await updateProduct(editedProduct.value.id, body);
+
+          if (response.ok) {
+            Object.assign(
+              products.value[editedIndex.value],
+              editedProduct.value
+            );
+            dialog.value = true;
+          } else {
+            // TODO: handle 4xx, 3xx
+          }
+        } catch (error) {
+          error(error);
+        }
       } else {
-        products.value.push(editedProduct.value);
+        try {
+          const body: ICreateProduct = {
+            productName: editedProduct.value.productName,
+            price: editedProduct.value.price,
+          };
+          const response = await createProduct(body);
+          if (response.ok) {
+            products.value.push(await response.json());
+          } else {
+            // TODO: handle 4xx, 3xx
+          }
+        } catch (error) {
+          error(error);
+        }
       }
+
       close();
     };
 
-    onBeforeMount(mock);
+    const getProducts = async () => {
+      try {
+        const response = await getAllProducts();
+        if (response.ok) {
+          products.value = await response.json();
+        } else {
+          // TODO: handle 4xx, 3xx
+        }
+      } catch (error) {
+        error(error);
+      }
+    };
+
+    onBeforeMount(getProducts);
 
     watch(dialog, (val) => {
       val || close();
@@ -250,7 +258,6 @@ export default defineComponent({
       editedProduct,
       defaultCustomer,
       formTitle,
-      mock,
       editProduct,
       deleteProduct,
       deleteProductConfirm,
