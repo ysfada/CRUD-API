@@ -5,21 +5,20 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations
 {
-	public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
+	public class ProductConfiguration : IEntityTypeConfiguration<Product>
 	{
-		/// Tablo oluşturabilmek için bu şekilde Configurationları hazırlamamız gerekiyor. 
-		public void Configure(EntityTypeBuilder<Customer> builder)
+		public void Configure(EntityTypeBuilder<Product> builder)
 		{
-			builder.Property(c => c.FirstName)
+			builder.Property(p => p.ProductName)
 				.IsRequired()
 				.HasMaxLength((int) MaxLengthSize.Name);
-			builder.Property(c => c.LastName)
-				.IsRequired()
-				.HasMaxLength((int) MaxLengthSize.Name);
-			builder.Property(c => c.IsActive)
+			builder.Property(p => p.Price)
+				.HasColumnType("money")
+				.IsRequired();
+			builder.Property(p => p.IsActive)
 				.HasDefaultValue(0)
 				.ValueGeneratedOnAdd();
-			builder.Property(c => c.CreatedTime)
+			builder.Property(p => p.CreatedTime)
 				.HasDefaultValueSql("GETUTCDATE()")
 				.ValueGeneratedOnAdd()
 				.IsRequired();
