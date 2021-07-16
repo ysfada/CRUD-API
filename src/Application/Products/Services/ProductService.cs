@@ -33,7 +33,7 @@ namespace Application.Products.Services
 
 		public List<ProductDto> GetProducts()
 		{
-			var products = _productRepository.GetAll.Where(product => product.IsActive == 0).Select(f =>
+			var products = _productRepository.GetAll.Where(product => product.IsActive == 1).Select(f =>
 				new ProductDto()
 				{
 					Id = f.Id,
