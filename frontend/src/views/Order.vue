@@ -1,76 +1,86 @@
 <template>
-  <v-data-table
-    :headers="headers"
-    :items="products"
-    :search="search"
-    sort-by="id"
-    class="elevation-1"
-  >
-    <template v-slot:item.quantity="props">
-      <v-edit-dialog :return-value.sync="props.item.quantity" persistent>
-        {{ props.item.quantity }}
-        <template v-slot:input>
+  <div>
+    <v-data-table
+      :headers="headers"
+      :items="products"
+      :search="search"
+      sort-by="id"
+      class="elevation-1"
+    >
+      <template v-slot:item.quantity="props">
+        <v-edit-dialog :return-value.sync="props.item.quantity" persistent>
+          {{ props.item.quantity }}
+          <template v-slot:input>
+            <v-text-field
+              v-model="props.item.quantity"
+              type="number"
+              label="Quantity"
+              single-line
+            ></v-text-field>
+          </template>
+        </v-edit-dialog>
+      </template>
+      <template v-slot:top>
+        <v-toolbar flat>
+          <v-toolbar-title>Order product</v-toolbar-title>
+          <v-divider class="mx-4" inset vertical></v-divider>
+          <v-spacer></v-spacer>
           <v-text-field
-            v-model="props.item.quantity"
-            type="number"
-            label="Quantity"
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
             single-line
+            hide-details
           ></v-text-field>
-        </template>
-      </v-edit-dialog>
-    </template>
-    <template v-slot:top>
-      <v-toolbar flat>
-        <v-toolbar-title>Order product</v-toolbar-title>
-        <v-divider class="mx-4" inset vertical></v-divider>
-        <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="Search"
-          single-line
-          hide-details
-        ></v-text-field>
-        <v-spacer></v-spacer>
-        <v-select
-          :items="customers"
-          v-model="customer"
-          name="firstName"
-          :item-text="
-            (customer) => `${customer.firstName} ${customer.lastName}`
-          "
-          item-value="id"
-          return-object
-          label="Select customer"
-          solo
-          dense
-          flat
-          single-line
-          hide-details
-        ></v-select>
-        <v-dialog v-model="dialogDelete" max-width="500px">
-          <v-card>
-            <v-card-title class="text-h5"
-              >Are you sure you want to order this product?</v-card-title
-            >
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeOrderProduct"
-                >Cancel</v-btn
+          <v-spacer></v-spacer>
+          <v-select
+            :items="customers"
+            v-model="customer"
+            name="firstName"
+            :item-text="
+              (customer) => `${customer.firstName} ${customer.lastName}`
+            "
+            item-value="id"
+            return-object
+            label="Select customer"
+            solo
+            dense
+            flat
+            single-line
+            hide-details
+          ></v-select>
+          <v-dialog v-model="dialogDelete" max-width="500px">
+            <v-card>
+              <v-card-title class="text-h5"
+                >Are you sure you want to order this product?</v-card-title
               >
-              <v-btn color="blue darken-1" text @click="orderProductConfirm"
-                >OK</v-btn
-              >
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-      </v-toolbar>
-    </template>
-    <template v-slot:item.buy="{ item }">
-      <v-icon small @click="orderProduct(item)"> mdi-cart-plus </v-icon>
-    </template>
-  </v-data-table>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="blue darken-1" text @click="closeOrderProduct"
+                  >Cancel</v-btn
+                >
+                <v-btn color="blue darken-1" text @click="orderProductConfirm"
+                  >OK</v-btn
+                >
+                <v-spacer></v-spacer>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </v-toolbar>
+      </template>
+      <template v-slot:item.buy="{ item }">
+        <v-icon small @click="orderProduct(item)"> mdi-cart-plus </v-icon>
+      </template>
+    </v-data-table>
+
+    <v-snackbar v-model="snack" :timeout="3000" :color="snackColor">
+      {{ snackText }}
+
+      <template v-slot:action="{ attrs }">
+        <v-btn v-bind="attrs" text @click="snack = false"> Close </v-btn>
+      </template>
+    </v-snackbar>
+  </div>
 </template>
 
 <script lang="ts">
@@ -93,6 +103,9 @@ export default defineComponent({
     const { getAllCustomers } = useCustomer();
     const { getAllProducts } = useProduct();
     const { createOrder } = useOrder();
+    const snack = ref(false);
+    const snackColor = ref("");
+    const snackText = ref("");
     const dialog = ref(false);
     const dialogDelete = ref(false);
     const search = ref("");
@@ -145,11 +158,15 @@ export default defineComponent({
 
         if (response.ok) {
           closeOrderProduct();
+          showSnack(
+            `${customer.value.firstName} ${customer.value.lastName} bought ${orderedProduct.value.productName} quantity: ${orderedProduct.value.quantity}`,
+            "info"
+          );
         } else {
           // TODO: handle 4xx, 3xx
         }
       } catch (error) {
-        error(error);
+        showSnack(error, "error");
       }
     };
 
@@ -187,7 +204,7 @@ export default defineComponent({
           // TODO: handle 4xx, 3xx
         }
       } catch (error) {
-        error(error);
+        showSnack(error, "error");
       }
     };
 
@@ -200,13 +217,19 @@ export default defineComponent({
           // TODO: handle 4xx, 3xx
         }
       } catch (error) {
-        error(error);
+        showSnack(error, "error");
       }
     };
 
     onBeforeMount(getCustomers);
 
     onBeforeMount(getProducts);
+
+    const showSnack = (txt: string, color: string) => {
+      snack.value = true;
+      snackColor.value = color;
+      snackText.value = txt;
+    };
 
     watch(dialog, (val) => {
       val || close();
@@ -217,6 +240,9 @@ export default defineComponent({
     });
 
     return {
+      snack,
+      snackText,
+      snackColor,
       dialog,
       dialogDelete,
       search,
