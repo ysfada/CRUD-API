@@ -2,7 +2,7 @@
   <div>
     <v-data-table
       :headers="headers"
-      :items="products"
+      :items="orderProducts"
       :search="search"
       sort-by="id"
       class="elevation-1"
@@ -37,9 +37,7 @@
             :items="customers"
             v-model="customer"
             name="firstName"
-            :item-text="
-              (customer) => `${customer.firstName} ${customer.lastName}`
-            "
+            :item-text="customerName"
             item-value="id"
             return-object
             label="Select customer"
@@ -49,7 +47,7 @@
             single-line
             hide-details
           ></v-select>
-          <v-dialog v-model="dialogDelete" max-width="500px">
+          <v-dialog v-model="confirmationDialog" max-width="500px">
             <v-card>
               <v-card-title class="text-h5"
                 >Are you sure you want to order this product?</v-card-title
@@ -88,7 +86,6 @@ import { ICustomer } from "@/@types/customer";
 import { ICreateOrder } from "@/@types/order";
 import useCustomer from "@/composables/useCustomer";
 import useOrder from "@/composables/useOrder";
-import useProduct from "@/composables/useProduct";
 import {
   defineComponent,
   nextTick,
@@ -96,18 +93,24 @@ import {
   ref,
   watch,
 } from "@vue/composition-api";
-import { IOrderProduct } from "../@types/orderProduct";
+import { IOrderProduct } from "@/@types/orderProduct";
 
 export default defineComponent({
+  name: "Order",
   setup() {
-    const { getAllCustomers } = useCustomer();
-    const { getAllProducts } = useProduct();
-    const { createOrder } = useOrder();
+    const { customers, getAll: getAllCustomers } = useCustomer();
+    const {
+      orderProducts,
+      defaultProduct,
+      orderedProduct,
+      setProducts,
+      createOrder,
+    } = useOrder();
+
     const snack = ref(false);
     const snackColor = ref("");
     const snackText = ref("");
-    const dialog = ref(false);
-    const dialogDelete = ref(false);
+    const confirmationDialog = ref(false);
     const search = ref("");
     const headers = ref([
       { text: "Id", align: "start", value: "id" },
@@ -116,37 +119,45 @@ export default defineComponent({
       { text: "Quantity", value: "quantity" },
       { text: "Buy", value: "buy", sortable: false },
     ]);
-    const customers = ref<ICustomer[]>([]);
     const customer = ref<ICustomer>({ id: 0, firstName: "", lastName: "" });
-    const products = ref<IOrderProduct[]>([]);
     const orderedIndex = ref(-1);
-    const orderedProduct = ref<IOrderProduct>({
-      id: 0,
-      productName: "",
-      price: 0,
-      quantity: 0,
-    });
-    const defaultProduct = ref<IOrderProduct>({
-      id: 0,
-      productName: "",
-      price: 0,
-      quantity: 0,
-    });
+
+    const openSnack = (txt: string, color: string) => {
+      snack.value = true;
+      snackColor.value = color;
+      snackText.value = txt;
+    };
+
+    const customerName = (customer: ICustomer) => {
+      return `${customer.firstName} ${customer.lastName}`;
+    };
 
     const orderProduct = (product: IOrderProduct) => {
-      orderedIndex.value = products.value.indexOf(product);
-      orderedProduct.value = Object.assign({}, product);
-      dialogDelete.value = true;
+      orderedIndex.value = orderProducts.value.indexOf(product);
+      orderedProduct.value = product;
+      confirmationDialog.value = true;
+    };
+
+    const closeOrderProduct = () => {
+      confirmationDialog.value = false;
+      nextTick(() => {
+        orderedProduct.value = defaultProduct.value;
+        orderedIndex.value = -1;
+      });
     };
 
     const orderProductConfirm = async () => {
-      // TODO validate data
       if (
         !customer.value ||
         customer.value.id === 0 ||
         orderedProduct.value.quantity < 1
-      )
+      ) {
+        openSnack(
+          "you have to select a customer and order at least 1 product",
+          "warning"
+        );
         return;
+      }
 
       try {
         const body: ICreateOrder = {
@@ -158,106 +169,45 @@ export default defineComponent({
 
         if (response.ok) {
           closeOrderProduct();
-          showSnack(
-            `${customer.value.firstName} ${customer.value.lastName} bought ${orderedProduct.value.productName} quantity: ${orderedProduct.value.quantity}`,
-            "info"
+          openSnack(
+            `${customer.value.firstName} ${customer.value.lastName} ordered ${orderedProduct.value.quantity} ${orderedProduct.value.productName}`,
+            "success"
           );
         } else {
-          // TODO: handle 4xx, 3xx
+          openSnack(response.statusText, "warning");
         }
       } catch (error) {
-        showSnack(error, "error");
+        openSnack(error, "error");
       }
     };
 
-    const close = () => {
-      dialog.value = false;
-      nextTick(() => {
-        orderedProduct.value = Object.assign({}, defaultProduct.value);
-        orderedIndex.value = -1;
-      });
-    };
-
-    const closeOrderProduct = () => {
-      dialogDelete.value = false;
-      nextTick(() => {
-        orderedProduct.value = Object.assign({}, defaultProduct.value);
-        orderedIndex.value = -1;
-      });
-    };
-
-    const save = () => {
-      if (orderedIndex.value > -1) {
-        Object.assign(products.value[orderedIndex.value], orderedProduct.value);
-      } else {
-        products.value.push(orderedProduct.value);
-      }
-      close();
-    };
-
-    const getProducts = async () => {
-      try {
-        const response = await getAllProducts();
-        if (response.ok) {
-          products.value = await response.json();
-        } else {
-          // TODO: handle 4xx, 3xx
-        }
-      } catch (error) {
-        showSnack(error, "error");
-      }
-    };
-
-    const getCustomers = async () => {
-      try {
-        const response = await getAllCustomers();
-        if (response.ok) {
-          customers.value = await response.json();
-        } else {
-          // TODO: handle 4xx, 3xx
-        }
-      } catch (error) {
-        showSnack(error, "error");
-      }
-    };
-
-    onBeforeMount(getCustomers);
-
-    onBeforeMount(getProducts);
-
-    const showSnack = (txt: string, color: string) => {
-      snack.value = true;
-      snackColor.value = color;
-      snackText.value = txt;
-    };
-
-    watch(dialog, (val) => {
-      val || close();
+    onBeforeMount(async () => {
+      await setProducts().catch((error) => openSnack(error, "error"));
     });
 
-    watch(dialogDelete, (val) => {
+    watch(confirmationDialog, (val) => {
       val || closeOrderProduct();
     });
+
+    onBeforeMount(
+      async () =>
+        await getAllCustomers().catch((error) => openSnack(error, "error"))
+    );
 
     return {
       snack,
       snackText,
       snackColor,
-      dialog,
-      dialogDelete,
+      confirmationDialog,
       search,
       headers,
       customer,
       customers,
-      products,
-      orderedIndex,
-      orderedProduct,
-      defaultProduct,
+      customerName,
+      orderProducts,
       orderProduct,
       orderProductConfirm,
-      close,
       closeOrderProduct,
-      save,
     };
   },
 });

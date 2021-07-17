@@ -20,7 +20,7 @@
             hide-details
           ></v-text-field>
           <v-spacer></v-spacer>
-          <v-dialog v-model="dialog" max-width="500px">
+          <v-dialog v-model="formDialog" max-width="500px">
             <template v-slot:activator="{ on, attrs }">
               <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
                 New Product
@@ -59,24 +59,27 @@
 
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="close">
+                <v-btn color="blue darken-1" text @click="closeFormDialog">
                   Cancel
                 </v-btn>
                 <v-btn color="blue darken-1" text @click="save"> Save </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
-          <v-dialog v-model="dialogDelete" max-width="500px">
+          <v-dialog v-model="confirmationDialog" max-width="500px">
             <v-card>
               <v-card-title class="text-h5"
-                >Are you sure you want to delete this customer?</v-card-title
+                >Are you sure you want to delete this product?</v-card-title
               >
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDelete"
+                <v-btn
+                  color="blue darken-1"
+                  text
+                  @click="confirmationDialogCancel"
                   >Cancel</v-btn
                 >
-                <v-btn color="blue darken-1" text @click="deleteProductConfirm"
+                <v-btn color="blue darken-1" text @click="confirmationDialogOk"
                   >OK</v-btn
                 >
                 <v-spacer></v-spacer>
@@ -86,10 +89,8 @@
         </v-toolbar>
       </template>
       <template v-slot:item.actions="{ item }">
-        <v-icon small class="mr-2" @click="editProduct(item)">
-          mdi-pencil
-        </v-icon>
-        <v-icon small @click="deleteProduct(item)"> mdi-delete </v-icon>
+        <v-icon small class="mr-2" @click="edit(item)"> mdi-pencil </v-icon>
+        <v-icon small @click="remove(item)"> mdi-delete </v-icon>
       </template>
     </v-data-table>
 
@@ -104,7 +105,6 @@
 </template>
 
 <script lang="ts">
-import useProduct from "@/composables/useProduct";
 import {
   computed,
   defineComponent,
@@ -113,17 +113,27 @@ import {
   ref,
   watch,
 } from "@vue/composition-api";
-import { ICreateProduct, IProduct, IUpdateProduct } from "../@types/product";
+import { ICreateProduct, IProduct, IUpdateProduct } from "@/@types/product";
+import useProduct from "@/composables/useProduct";
 
 export default defineComponent({
+  name: "Product",
   setup() {
-    const { deleteProductById, updateProduct, createProduct, getAllProducts } =
-      useProduct();
+    const {
+      products,
+      defaultProduct,
+      editedProduct,
+      getAll,
+      removeById,
+      updateById,
+      create,
+    } = useProduct();
+
     const snack = ref(false);
     const snackColor = ref("");
     const snackText = ref("");
-    const dialog = ref(false);
-    const dialogDelete = ref(false);
+    const formDialog = ref(false);
+    const confirmationDialog = ref(false);
     const search = ref("");
     const headers = ref([
       { text: "Id", align: "start", value: "id" },
@@ -131,165 +141,141 @@ export default defineComponent({
       { text: "Price", value: "price" },
       { text: "Actions", value: "actions", sortable: false },
     ]);
-    const products = ref<IProduct[]>([]);
     const editedIndex = ref(-1);
-    const editedProduct = ref<IProduct>({
-      id: 0,
-      productName: "",
-      price: 0,
-    });
-    const defaultCustomer = ref<IProduct>({
-      id: 0,
-      productName: "",
-      price: 0,
-    });
-
     const formTitle = computed(() =>
       editedIndex.value === -1 ? "New Product" : "Edit Product"
     );
 
-    const editProduct = (product: IProduct) => {
-      editedIndex.value = products.value.indexOf(product);
-      editedProduct.value = Object.assign({}, product);
-      dialog.value = true;
-    };
-
-    const deleteProduct = (product: IProduct) => {
-      editedIndex.value = products.value.indexOf(product);
-      editedProduct.value = Object.assign({}, product);
-      dialogDelete.value = true;
-    };
-
-    const deleteProductConfirm = async () => {
-      try {
-        const response = await deleteProductById(editedProduct.value.id);
-        if (response.ok) {
-          products.value.splice(editedIndex.value, 1);
-          closeDelete();
-          showSnack("Product deleted", "info");
-        } else {
-          // TODO: handle 4xx, 3xx
-        }
-      } catch (error) {
-        showSnack(error, "error");
-      }
-
-      closeDelete();
-    };
-
-    const close = () => {
-      dialog.value = false;
-      nextTick(() => {
-        editedProduct.value = Object.assign({}, defaultCustomer.value);
-        editedIndex.value = -1;
-      });
-    };
-
-    const closeDelete = () => {
-      dialogDelete.value = false;
-      nextTick(() => {
-        editedProduct.value = Object.assign({}, defaultCustomer.value);
-        editedIndex.value = -1;
-      });
-    };
-
-    const save = async () => {
-      // TODO validate data
-      if (
-        editedProduct.value.productName.length < 1 ||
-        editedProduct.value.price < 0
-      )
-        return;
-
-      if (editedIndex.value > -1) {
-        try {
-          const body: IUpdateProduct = {
-            productName: editedProduct.value.productName,
-            price: editedProduct.value.price,
-          };
-          const response = await updateProduct(editedProduct.value.id, body);
-
-          if (response.ok) {
-            Object.assign(
-              products.value[editedIndex.value],
-              editedProduct.value
-            );
-            dialog.value = true;
-            showSnack("Product updated", "info");
-          } else {
-            // TODO: handle 4xx, 3xx
-          }
-        } catch (error) {
-          showSnack(error, "error");
-        }
-      } else {
-        try {
-          const body: ICreateProduct = {
-            productName: editedProduct.value.productName,
-            price: editedProduct.value.price,
-          };
-          const response = await createProduct(body);
-          if (response.ok) {
-            products.value.push(await response.json());
-            showSnack("Product created", "info");
-          } else {
-            // TODO: handle 4xx, 3xx
-          }
-        } catch (error) {
-          showSnack(error, "error");
-        }
-      }
-
-      close();
-    };
-
-    const getProducts = async () => {
-      try {
-        const response = await getAllProducts();
-        if (response.ok) {
-          products.value = await response.json();
-        } else {
-          // TODO: handle 4xx, 3xx
-        }
-      } catch (error) {
-        showSnack(error, "error");
-      }
-    };
-
-    onBeforeMount(getProducts);
-
-    const showSnack = (txt: string, color: string) => {
+    const openSnack = (txt: string, color: string) => {
       snack.value = true;
       snackColor.value = color;
       snackText.value = txt;
     };
 
-    watch(dialog, (val) => {
-      val || close();
+    const edit = (product: IProduct) => {
+      editedIndex.value = products.value.indexOf(product);
+      editedProduct.value = product;
+      formDialog.value = true;
+    };
+
+    const remove = (product: IProduct) => {
+      editedIndex.value = products.value.indexOf(product);
+      editedProduct.value = product;
+      confirmationDialog.value = true;
+    };
+
+    const closeFormDialog = () => {
+      formDialog.value = false;
+      nextTick(() => {
+        editedProduct.value = defaultProduct.value;
+        editedIndex.value = -1;
+      });
+    };
+
+    const confirmationDialogCancel = () => {
+      confirmationDialog.value = false;
+      nextTick(() => {
+        editedProduct.value = defaultProduct.value;
+        editedIndex.value = -1;
+      });
+    };
+
+    const confirmationDialogOk = async () => {
+      try {
+        const response = await removeById(editedProduct.value.id);
+        if (response.ok) {
+          openSnack("Product deleted", "success");
+        } else {
+          openSnack(response.statusText, "warning");
+        }
+      } catch (error) {
+        openSnack(error, "error");
+      }
+
+      confirmationDialogCancel();
+    };
+
+    const save = async () => {
+      if (
+        editedProduct.value.productName.length < 1 ||
+        editedProduct.value.price < 1
+      ) {
+        openSnack("productName or price cannot be empty", "warning");
+        return;
+      }
+
+      if (editedIndex.value > -1) {
+        await updateProduct();
+      } else {
+        await createProduct();
+      }
+
+      closeFormDialog();
+    };
+
+    const updateProduct = async () => {
+      try {
+        const payload: IUpdateProduct = {
+          productName: editedProduct.value.productName,
+          price: editedProduct.value.price,
+        };
+        const response = await updateById(editedProduct.value.id, payload);
+
+        if (response.ok) {
+          openSnack("Product updated", "success");
+        } else {
+          openSnack(response.statusText, "warning");
+        }
+      } catch (error) {
+        openSnack(error, "error");
+      }
+    };
+
+    const createProduct = async () => {
+      try {
+        const payload: ICreateProduct = {
+          productName: editedProduct.value.productName,
+          price: editedProduct.value.price,
+        };
+        const response = await create(payload);
+        if (response.ok) {
+          openSnack("Product created", "success");
+        } else {
+          openSnack(response.statusText, "warning");
+        }
+      } catch (error) {
+        openSnack(error, "error");
+      }
+    };
+
+    watch(formDialog, (val) => {
+      val || closeFormDialog();
     });
 
-    watch(dialogDelete, (val) => {
-      val || closeDelete();
+    watch(confirmationDialog, (val) => {
+      val || confirmationDialogCancel();
     });
+
+    onBeforeMount(
+      async () => await getAll().catch((error) => openSnack(error, "error"))
+    );
 
     return {
       snack,
       snackText,
       snackColor,
-      dialog,
-      dialogDelete,
+      formDialog,
+      confirmationDialog,
       search,
       headers,
       products,
-      editedIndex,
       editedProduct,
-      defaultCustomer,
       formTitle,
-      editProduct,
-      deleteProduct,
-      deleteProductConfirm,
-      close,
-      closeDelete,
+      edit,
+      remove,
+      confirmationDialogOk,
+      closeFormDialog,
+      confirmationDialogCancel,
       save,
     };
   },

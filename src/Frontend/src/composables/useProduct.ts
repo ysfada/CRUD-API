@@ -1,35 +1,84 @@
-import { IUpdateProduct } from "../@types/product";
+import { readonly, ref } from "@vue/composition-api";
+import { ICreateProduct, IProduct, IUpdateProduct } from "@/@types/product";
 import useState from "./state";
 
-const { baseURL } = useState();
-
-function getAllProducts() {
-  return fetch(`${baseURL.value}/Product`);
-}
-
-function deleteProductById(id: number) {
-  return fetch(`${baseURL.value}/Product/${id}`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-function updateProduct(id: number, product: IUpdateProduct) {
-  return fetch(`${baseURL.value}/Product/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(product),
-  });
-}
-
-function createProduct(product: IUpdateProduct) {
-  return fetch(`${baseURL.value}/Product`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(product),
-  });
-}
-
 export default function useProduct() {
-  return { getAllProducts, deleteProductById, updateProduct, createProduct };
+  const { baseURL } = useState();
+
+  const products = ref<IProduct[]>([]);
+  const defaultProduct = ref<IProduct>({
+    id: 0,
+    productName: "",
+    price: 0,
+  });
+  const editedProduct = ref<IProduct>({
+    id: 0,
+    productName: "",
+    price: 0,
+  });
+
+  async function getAll() {
+    const response = await fetch(`${baseURL.value}/Product`);
+    const clone = response.clone();
+    if (clone.ok) {
+      products.value = await clone.json();
+    }
+    return response;
+  }
+
+  async function removeById(id: number) {
+    const response = await fetch(`${baseURL.value}/Product/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.ok) {
+      products.value.splice(
+        products.value.findIndex((product) => product.id === id),
+        1
+      );
+    }
+
+    return response;
+  }
+
+  async function updateById(id: number, product: IUpdateProduct) {
+    const response = await fetch(`${baseURL.value}/Product/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product),
+    });
+    if (response.ok) {
+      Object.assign(
+        products.value[
+          products.value.findIndex((product) => product.id === id)
+        ],
+        editedProduct.value
+      );
+    }
+    return response;
+  }
+
+  async function create(product: ICreateProduct) {
+    const response = await fetch(`${baseURL.value}/Product`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product),
+    });
+
+    if (response.ok) {
+      products.value.push(await response.json());
+    }
+    return response;
+  }
+
+  return {
+    products: readonly(products),
+    defaultProduct,
+    editedProduct,
+    getAll,
+    removeById,
+    updateById,
+    create,
+  };
 }

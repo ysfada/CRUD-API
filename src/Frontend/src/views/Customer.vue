@@ -20,7 +20,7 @@
             hide-details
           ></v-text-field>
           <v-spacer></v-spacer>
-          <v-dialog v-model="dialog" max-width="500px">
+          <v-dialog v-model="formDialog" max-width="500px">
             <template v-slot:activator="{ on, attrs }">
               <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
                 New Customer
@@ -59,24 +59,27 @@
 
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="close">
+                <v-btn color="blue darken-1" text @click="closeFormDialog">
                   Cancel
                 </v-btn>
                 <v-btn color="blue darken-1" text @click="save"> Save </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
-          <v-dialog v-model="dialogDelete" max-width="500px">
+          <v-dialog v-model="confirmationDialog" max-width="500px">
             <v-card>
               <v-card-title class="text-h5"
                 >Are you sure you want to delete this customer?</v-card-title
               >
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDelete"
+                <v-btn
+                  color="blue darken-1"
+                  text
+                  @click="confirmationDialogCancel"
                   >Cancel</v-btn
                 >
-                <v-btn color="blue darken-1" text @click="deleteCustomerConfirm"
+                <v-btn color="blue darken-1" text @click="confirmationDialogOk"
                   >OK</v-btn
                 >
                 <v-spacer></v-spacer>
@@ -86,10 +89,8 @@
         </v-toolbar>
       </template>
       <template v-slot:item.actions="{ item }">
-        <v-icon small class="mr-2" @click="editCustomer(item)">
-          mdi-pencil
-        </v-icon>
-        <v-icon small @click="deleteCustomer(item)"> mdi-delete </v-icon>
+        <v-icon small class="mr-2" @click="edit(item)"> mdi-pencil </v-icon>
+        <v-icon small @click="remove(item)"> mdi-delete </v-icon>
       </template>
     </v-data-table>
 
@@ -104,7 +105,6 @@
 </template>
 
 <script lang="ts">
-import useCustomer from "@/composables/useCustomer";
 import {
   computed,
   defineComponent,
@@ -113,25 +113,27 @@ import {
   ref,
   watch,
 } from "@vue/composition-api";
-import {
-  ICreateCustomer,
-  ICustomer,
-  IUpdateCustomer,
-} from "../@types/customer";
+import { ICreateCustomer, ICustomer, IUpdateCustomer } from "@/@types/customer";
+import useCustomer from "@/composables/useCustomer";
 
 export default defineComponent({
+  name: "Customer",
   setup() {
     const {
-      getAllCustomers,
-      deleteCustomerById,
-      updateCustomer,
-      createCustomer,
+      customers,
+      defaultCustomer,
+      editedCustomer,
+      getAll,
+      removeById,
+      updateById,
+      create,
     } = useCustomer();
+
     const snack = ref(false);
     const snackColor = ref("");
     const snackText = ref("");
-    const dialog = ref(false);
-    const dialogDelete = ref(false);
+    const formDialog = ref(false);
+    const confirmationDialog = ref(false);
     const search = ref("");
     const headers = ref([
       { text: "Id", align: "start", value: "id" },
@@ -139,164 +141,141 @@ export default defineComponent({
       { text: "Last name", value: "lastName" },
       { text: "Actions", value: "actions", sortable: false },
     ]);
-    const customers = ref<ICustomer[]>([]);
     const editedIndex = ref(-1);
-    const editedCustomer = ref<ICustomer>({
-      id: 0,
-      firstName: "",
-      lastName: "",
-    });
-    const defaultCustomer = ref<ICustomer>({
-      id: 0,
-      firstName: "",
-      lastName: "",
-    });
-
     const formTitle = computed(() =>
       editedIndex.value === -1 ? "New Customer" : "Edit Customer"
     );
 
-    const editCustomer = (customer: ICustomer) => {
-      editedIndex.value = customers.value.indexOf(customer);
-      editedCustomer.value = Object.assign({}, customer);
-      dialog.value = true;
-    };
-
-    const deleteCustomer = (customer: ICustomer) => {
-      editedIndex.value = customers.value.indexOf(customer);
-      editedCustomer.value = Object.assign({}, customer);
-      dialogDelete.value = true;
-    };
-
-    const deleteCustomerConfirm = async () => {
-      try {
-        const response = await deleteCustomerById(editedCustomer.value.id);
-        if (response.ok) {
-          customers.value.splice(editedIndex.value, 1);
-          showSnack("Customer deleted", "info");
-        } else {
-          // TODO: handle 4xx, 3xx
-        }
-      } catch (error) {
-        showSnack(error, "error");
-      }
-
-      closeDelete();
-    };
-
-    const close = () => {
-      dialog.value = false;
-      nextTick(() => {
-        editedCustomer.value = Object.assign({}, defaultCustomer.value);
-        editedIndex.value = -1;
-      });
-    };
-
-    const closeDelete = () => {
-      dialogDelete.value = false;
-      nextTick(() => {
-        editedCustomer.value = Object.assign({}, defaultCustomer.value);
-        editedIndex.value = -1;
-      });
-    };
-
-    const save = async () => {
-      // TODO validate data
-      if (
-        editedCustomer.value.firstName.length < 1 ||
-        editedCustomer.value.lastName.length < 1
-      )
-        return;
-
-      if (editedIndex.value > -1) {
-        try {
-          const body: IUpdateCustomer = {
-            firstName: editedCustomer.value.firstName,
-            lastName: editedCustomer.value.lastName,
-          };
-          const response = await updateCustomer(editedCustomer.value.id, body);
-
-          if (response.ok) {
-            Object.assign(
-              customers.value[editedIndex.value],
-              editedCustomer.value
-            );
-            dialog.value = true;
-            showSnack("Customer updated", "info");
-          } else {
-            // TODO: handle 4xx, 3xx
-          }
-        } catch (error) {
-          showSnack(error, "error");
-        }
-      } else {
-        try {
-          const body: ICreateCustomer = {
-            firstName: editedCustomer.value.firstName,
-            lastName: editedCustomer.value.lastName,
-          };
-          const response = await createCustomer(body);
-          if (response.ok) {
-            customers.value.push(await response.json());
-            showSnack("Customer created", "info");
-          } else {
-            // TODO: handle 4xx, 3xx
-          }
-        } catch (error) {
-          showSnack(error, "error");
-        }
-      }
-
-      close();
-    };
-
-    const getCustomers = async () => {
-      try {
-        const response = await getAllCustomers();
-        if (response.ok) {
-          customers.value = await response.json();
-        } else {
-          // TODO: handle 4xx, 3xx
-        }
-      } catch (error) {
-        showSnack(error, "error");
-      }
-    };
-
-    onBeforeMount(getCustomers);
-
-    const showSnack = (txt: string, color: string) => {
+    const openSnack = (txt: string, color: string) => {
       snack.value = true;
       snackColor.value = color;
       snackText.value = txt;
     };
 
-    watch(dialog, (val) => {
-      val || close();
+    const edit = (customer: ICustomer) => {
+      editedIndex.value = customers.value.indexOf(customer);
+      editedCustomer.value = customer;
+      formDialog.value = true;
+    };
+
+    const remove = (customer: ICustomer) => {
+      editedIndex.value = customers.value.indexOf(customer);
+      editedCustomer.value = customer;
+      confirmationDialog.value = true;
+    };
+
+    const closeFormDialog = () => {
+      formDialog.value = false;
+      nextTick(() => {
+        editedCustomer.value = defaultCustomer.value;
+        editedIndex.value = -1;
+      });
+    };
+
+    const confirmationDialogCancel = () => {
+      confirmationDialog.value = false;
+      nextTick(() => {
+        editedCustomer.value = defaultCustomer.value;
+        editedIndex.value = -1;
+      });
+    };
+
+    const confirmationDialogOk = async () => {
+      try {
+        const response = await removeById(editedCustomer.value.id);
+        if (response.ok) {
+          openSnack("Customer deleted", "success");
+        } else {
+          openSnack(response.statusText, "warning");
+        }
+      } catch (error) {
+        openSnack(error, "error");
+      }
+
+      confirmationDialogCancel();
+    };
+
+    const save = async () => {
+      if (
+        editedCustomer.value.firstName.length < 1 ||
+        editedCustomer.value.lastName.length < 1
+      ) {
+        openSnack("firstname or lastName cannot be empty", "warning");
+        return;
+      }
+
+      if (editedIndex.value > -1) {
+        await updateCustomer();
+      } else {
+        await createCustomer();
+      }
+
+      closeFormDialog();
+    };
+
+    const updateCustomer = async () => {
+      try {
+        const payload: IUpdateCustomer = {
+          firstName: editedCustomer.value.firstName,
+          lastName: editedCustomer.value.lastName,
+        };
+        const response = await updateById(editedCustomer.value.id, payload);
+
+        if (response.ok) {
+          openSnack("Customer updated", "success");
+        } else {
+          openSnack(response.statusText, "warning");
+        }
+      } catch (error) {
+        openSnack(error, "error");
+      }
+    };
+
+    const createCustomer = async () => {
+      try {
+        const payload: ICreateCustomer = {
+          firstName: editedCustomer.value.firstName,
+          lastName: editedCustomer.value.lastName,
+        };
+        const response = await create(payload);
+        if (response.ok) {
+          openSnack("Customer created", "success");
+        } else {
+          openSnack(response.statusText, "warning");
+        }
+      } catch (error) {
+        openSnack(error, "error");
+      }
+    };
+
+    watch(formDialog, (val) => {
+      val || closeFormDialog();
     });
 
-    watch(dialogDelete, (val) => {
-      val || closeDelete();
+    watch(confirmationDialog, (val) => {
+      val || confirmationDialogCancel();
     });
+
+    onBeforeMount(
+      async () => await getAll().catch((error) => openSnack(error, "error"))
+    );
 
     return {
       snack,
       snackText,
       snackColor,
-      dialog,
-      dialogDelete,
+      formDialog,
+      confirmationDialog,
       search,
       headers,
       customers,
-      editedIndex,
       editedCustomer,
-      defaultCustomer,
       formTitle,
-      editCustomer,
-      deleteCustomer,
-      deleteCustomerConfirm,
-      close,
-      closeDelete,
+      edit,
+      remove,
+      confirmationDialogOk,
+      closeFormDialog,
+      confirmationDialogCancel,
       save,
     };
   },
