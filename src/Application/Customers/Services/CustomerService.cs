@@ -34,14 +34,7 @@ namespace Application.Customers.Services
 		public List<CustomerDto> GetCustomers()
 		{
 			// Burada automapper kullanabilirsiniz
-			var customers = _customerRepository.GetAll.Select(f => new CustomerDto
-			{
-				ExternalId = f.ExternalId,
-				Id = f.Id,
-				IsActive = f.IsActive,
-				FirstName = f.FirstName,
-				LastName = f.LastName
-			});
+			var customers = _customerRepository.GetAll.Select(customer => customer.AsDto());
 			return customers.ToList();
 		}
 
@@ -55,13 +48,7 @@ namespace Application.Customers.Services
 
 			_customerRepository.Commit();
 
-			return new CustomerDto
-			{
-				Id = newCustomer.Id,
-				FirstName = newCustomer.FirstName,
-				LastName = newCustomer.LastName,
-				IsActive = newCustomer.IsActive,
-			};
+			return newCustomer.AsDto();
 		}
 
 		public int UpdateCustomer(int id, UpdateCustomerDto customer)
