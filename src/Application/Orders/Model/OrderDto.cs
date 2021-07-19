@@ -1,4 +1,7 @@
-﻿namespace Application.Orders.Model
+﻿using Application.Customers.Model;
+using Application.Products.Model;
+
+namespace Application.Orders.Model
 {
 	public class OrderDto
 	{
@@ -8,5 +11,8 @@
 		public int Quantity { get; set; }
 
 		public short IsActive { get; set; }
+
+		public CustomerDto Customer { get; set; }
+		public ProductDto Product { get; set; }
 	}
 }

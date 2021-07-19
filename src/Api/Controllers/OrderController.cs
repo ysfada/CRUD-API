@@ -1,6 +1,9 @@
-﻿using Application.Orders.Model;
+﻿using System;
+using System.Collections.Generic;
+using Application.Orders.Model;
 using Microsoft.AspNetCore.Mvc;
 using Application.Orders.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace Api.Controllers
 {
@@ -25,12 +28,55 @@ namespace Api.Controllers
 			return Ok(data);
 		}
 
+		[HttpGet]
+		public IEnumerable<OrderDto> GetOrders([FromQuery(Name = "isActive")] short? isActive)
+		{
+			return _orderService.GetOrders(isActive);
+		}
+
 		[HttpPost]
 		public ActionResult<OrderDto> CreateOrder(CreateOrderDto createOrderDto)
 		{
 			var order = _orderService.CreateOrder(createOrderDto);
 
 			return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
+		}
+
+		[HttpPut("{id:int}")]
+		public IActionResult UpdateOrder(int id, UpdateOrderDto updateOrderDto)
+		{
+			var existingOrder = _orderService.GetOrder(id);
+
+			if (existingOrder is null)
+			{
+				return NotFound();
+			}
+
+			try
+			{
+				_orderService.UpdateOrder(id, updateOrderDto);
+			}
+			catch (Exception e)
+			{
+				return StatusCode(StatusCodes.Status500InternalServerError, e);
+			}
+
+			return NoContent();
+		}
+
+		[HttpDelete("{id:int}")]
+		public IActionResult DeleteOrder(int id)
+		{
+			var existingOrder = _orderService.GetOrder(id);
+
+			if (existingOrder is null)
+			{
+				return NotFound();
+			}
+
+			_orderService.DeleteOrder(id);
+
+			return NoContent();
 		}
 	}
 }

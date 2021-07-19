@@ -1,4 +1,6 @@
-﻿using Application.Orders.Model;
+﻿using Application.Customers.Services;
+using Application.Orders.Model;
+using Application.Products.Services;
 using Domain.Entities;
 
 namespace Application.Orders.Services
@@ -14,6 +16,19 @@ namespace Application.Orders.Services
 				ProductId = order.ProductId,
 				Quantity = order.Quantity,
 				IsActive = order.IsActive,
+				Customer = order.Customer?.AsDto(),
+				Product = order.Product?.AsDto(),
+			};
+		}
+
+		public static Order AsOrder(this UpdateOrderDto updateOrderDto, int id)
+		{
+			return new()
+			{
+				Id = id,
+				Quantity = updateOrderDto.Quantity,
+				CustomerId = updateOrderDto.CustomerId,
+				ProductId = updateOrderDto.ProductId,
 			};
 		}
 
