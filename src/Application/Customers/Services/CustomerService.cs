@@ -15,13 +15,14 @@ namespace Application.Customers.Services
 			_customerRepository = customerRepository;
 		}
 
-		public CustomerDto GetCustomer(int id)
+		public CustomerDto GetCustomer(int id, short? isActive = null)
 		{
-			var customer = _customerRepository.GetAllNoTracking.FirstOrDefault(c => c.Id == id && c.IsActive == 1);
+			var q = _customerRepository.GetAllNoTracking.Where(p => p.Id == id);
+			var customer = isActive is null ? q.FirstOrDefault() : q.FirstOrDefault(c => c.IsActive == 1);
 			return customer?.AsDto();
 		}
 
-		public IEnumerable<CustomerDto> GetCustomers(short? isActive)
+		public IEnumerable<CustomerDto> GetCustomers(short? isActive = null)
 		{
 			var q = _customerRepository.GetAllNoTracking;
 			if (isActive is not null)

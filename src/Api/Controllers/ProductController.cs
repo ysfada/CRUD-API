@@ -15,9 +15,9 @@ namespace Api.Controllers
 		}
 
 		[HttpGet("{id:int}")]
-		public ActionResult<ProductDto> GetProduct(int id)
+		public ActionResult<ProductDto> GetProduct([FromQuery(Name = "isActive")] short? isActive, int id)
 		{
-			var data = _productService.GetProduct(id);
+			var data = _productService.GetProduct(id, isActive);
 			if (data is null)
 			{
 				return NotFound();

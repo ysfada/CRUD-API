@@ -15,13 +15,14 @@ namespace Application.Products.Services
 			_productRepository = productRepository;
 		}
 
-		public ProductDto GetProduct(int id)
+		public ProductDto GetProduct(int id, short? isActive = null)
 		{
-			var product = _productRepository.GetAllNoTracking.FirstOrDefault(p => p.Id == id && p.IsActive == 1);
+			var q = _productRepository.GetAllNoTracking.Where(p => p.Id == id);
+			var product = isActive is null ? q.FirstOrDefault() : q.FirstOrDefault(p => p.IsActive == 1);
 			return product?.AsDto();
 		}
 
-		public IEnumerable<ProductDto> GetProducts(short? isActive)
+		public IEnumerable<ProductDto> GetProducts(short? isActive = null)
 		{
 			var q = _productRepository.GetAllNoTracking;
 			if (isActive is not null)
