@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Application.Orders.Model;
 using Domain.Entities;
 using Infrastructure.Persistence;
@@ -15,55 +14,19 @@ namespace Application.Orders.Services
 			_orderRepository = orderRepository;
 		}
 
-		public OrderDto GetOrderById(int id)
+		public OrderDto GetOrder(int id)
 		{
-			var order = _orderRepository.GetById(id);
-			if (order is null)
-			{
-				return null;
-			}
-
-			return new OrderDto()
-			{
-				Id = order.Id,
-				CustomerId = order.CustomerId,
-				ProductId = order.ProductId,
-				Quantity = order.Quantity
-			};
+			var order = _orderRepository.GetAllNoTracking.FirstOrDefault(c => c.Id == id && c.IsActive == 1);
+			return order?.AsDto();
 		}
 
-		public List<OrderDto> GetCustomerOrders(int customerId)
+		public OrderDto CreateOrder(CreateOrderDto createOrderDto)
 		{
-			var orders = _orderRepository.GetAll.Where(order => order.CustomerId == customerId).Select(f =>
-				new OrderDto()
-				{
-					Id = f.Id,
-					CustomerId = f.CustomerId,
-					ProductId = f.ProductId,
-					Quantity = f.Quantity,
-					IsActive = f.IsActive,
-				});
-			return orders.ToList();
-		}
-
-		public OrderDto CreateOrder(CreateOrderDto order)
-		{
-			var newOrder = _orderRepository.InsertWithoutCommit(new Order()
-			{
-				CustomerId = order.CustomerId,
-				ProductId = order.ProductId,
-				Quantity = order.Quantity
-			});
+			var newOrder = _orderRepository.InsertWithoutCommit(createOrderDto.AsOrder());
 
 			_orderRepository.Commit();
 
-			return new OrderDto
-			{
-				Id = newOrder.Id,
-				CustomerId = newOrder.CustomerId,
-				ProductId = newOrder.ProductId,
-				Quantity = newOrder.Quantity,
-			};
+			return newOrder.AsDto();
 		}
 	}
 }

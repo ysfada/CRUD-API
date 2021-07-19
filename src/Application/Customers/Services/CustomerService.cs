@@ -15,55 +15,41 @@ namespace Application.Customers.Services
 			_customerRepository = customerRepository;
 		}
 
-		public CustomerDto GetCustomerById(int id)
+		public CustomerDto GetCustomer(int id)
 		{
-			var customer = _customerRepository.GetById(id);
-			if (customer is null)
-			{
-				return null;
-			}
-
-			return new CustomerDto()
-			{
-				Id = customer.Id,
-				FirstName = customer.FirstName,
-				LastName = customer.LastName
-			};
+			var customer = _customerRepository.GetAllNoTracking.FirstOrDefault(c => c.Id == id && c.IsActive == 1);
+			return customer?.AsDto();
 		}
 
-		public List<CustomerDto> GetCustomers()
+		public IEnumerable<CustomerDto> GetCustomers(short? isActive)
 		{
-			// Burada automapper kullanabilirsiniz
-			var customers = _customerRepository.GetAll.Select(customer => customer.AsDto());
+			var q = _customerRepository.GetAllNoTracking;
+			if (isActive is not null)
+			{
+				q = q.Where(customer => customer.IsActive == isActive);
+			}
+			var customers = q.Select(customer => customer.AsDto());
+
 			return customers.ToList();
 		}
 
-		public CustomerDto CreateCustomer(CreateCustomerDto customer)
+		public CustomerDto CreateCustomer(CreateCustomerDto createCustomerDto)
 		{
-			var newCustomer = _customerRepository.InsertWithoutCommit(new Customer
-			{
-				FirstName = customer.FirstName,
-				LastName = customer.LastName,
-			});
+			var newCustomer = _customerRepository.InsertWithoutCommit(createCustomerDto.AsCustomer());
 
 			_customerRepository.Commit();
 
 			return newCustomer.AsDto();
 		}
 
-		public int UpdateCustomer(int id, UpdateCustomerDto customer)
+		public void UpdateCustomer(int id, UpdateCustomerDto updateCustomerDto)
 		{
-			return _customerRepository.Update(new Customer
-			{
-				Id = id,
-				FirstName = customer.FirstName,
-				LastName = customer.LastName,
-			});
+			_customerRepository.Update(updateCustomerDto.AsCustomer(id));
 		}
 
-		public int DeleteCustomer(int id)
+		public void DeleteCustomer(int id)
 		{
-			return _customerRepository.Delete(new Customer
+			_customerRepository.Delete(new Customer
 			{
 				Id = id,
 			});

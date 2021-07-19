@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Application.Products.Model;
 using Microsoft.AspNetCore.Mvc;
 using Application.Products.Services;
@@ -15,9 +15,9 @@ namespace Api.Controllers
 		}
 
 		[HttpGet("{id:int}")]
-		public IActionResult Get(int id)
+		public ActionResult<ProductDto> GetProduct(int id)
 		{
-			var data = _productService.GetProductById(id);
+			var data = _productService.GetProduct(id);
 			if (data is null)
 			{
 				return NotFound();
@@ -27,50 +27,45 @@ namespace Api.Controllers
 		}
 
 		[HttpGet]
-		public IActionResult GetAll()
+		public IEnumerable<ProductDto> GetProducts([FromQuery(Name = "isActive")] short? isActive)
 		{
-			var data = _productService.GetProducts();
-			return Ok(data);
+			return _productService.GetProducts(isActive);
 		}
 
 		[HttpPost]
-		public IActionResult Create(CreateProductDto product)
+		public ActionResult<ProductDto> CreateProduct(CreateProductDto createProductDto)
 		{
-			// TODO: validate input and return appropriate status code
+			var product = _productService.CreateProduct(createProductDto);
 
-			var data = _productService.CreateProduct(product);
-			if (data is null)
-			{
-				return BadRequest();
-			}
-
-			return Created((new Uri($"{Request.Path}/{data.Id}", UriKind.Relative)), data);
+			return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
 		}
 
 		[HttpPut("{id:int}")]
-		public IActionResult Update(int id, UpdateProductDto product)
+		public IActionResult UpdateProduct(int id, UpdateProductDto updateProductDto)
 		{
-			// TODO: validate input and return appropriate status code
+			var existingProduct = _productService.GetProduct(id);
 
-			var done = _productService.UpdateProduct(id, product);
-			if (done < 0)
+			if (existingProduct is null)
 			{
-				return BadRequest();
+				return NotFound();
 			}
+
+			_productService.UpdateProduct(id, updateProductDto);
 
 			return NoContent();
 		}
 
 		[HttpDelete("{id:int}")]
-		public IActionResult Delete(int id)
+		public IActionResult DeleteProduct(int id)
 		{
-			// TODO: validate input and return appropriate status code
+			var existingProduct = _productService.GetProduct(id);
 
-			var done = _productService.DeleteProduct(id);
-			if (done < 0)
+			if (existingProduct is null)
 			{
-				return BadRequest();
+				return NotFound();
 			}
+
+			_productService.DeleteProduct(id);
 
 			return NoContent();
 		}

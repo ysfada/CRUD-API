@@ -5,10 +5,10 @@ namespace Application.Customers.Services
 {
 	public interface ICustomerService
 	{
-		CustomerDto GetCustomerById(int id);
-		List<CustomerDto> GetCustomers();
-		CustomerDto CreateCustomer(CreateCustomerDto customer);
-		int UpdateCustomer(int id, UpdateCustomerDto customer);
-		int DeleteCustomer(int id);
+		CustomerDto GetCustomer(int id);
+		IEnumerable<CustomerDto> GetCustomers(short? isActive);
+		CustomerDto CreateCustomer(CreateCustomerDto createCustomerDto);
+		void UpdateCustomer(int id, UpdateCustomerDto updateCustomerDto);
+		void DeleteCustomer(int id);
 	}
 }

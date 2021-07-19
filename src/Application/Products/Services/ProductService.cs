@@ -15,67 +15,41 @@ namespace Application.Products.Services
 			_productRepository = productRepository;
 		}
 
-		public ProductDto GetProductById(int id)
+		public ProductDto GetProduct(int id)
 		{
-			var product = _productRepository.GetById(id);
-			if (product is null)
-			{
-				return null;
-			}
-
-			return new ProductDto()
-			{
-				Id = product.Id,
-				ProductName = product.ProductName,
-				Price = product.Price
-			};
+			var product = _productRepository.GetAllNoTracking.FirstOrDefault(p => p.Id == id && p.IsActive == 1);
+			return product?.AsDto();
 		}
 
-		public List<ProductDto> GetProducts()
+		public IEnumerable<ProductDto> GetProducts(short? isActive)
 		{
-			var products = _productRepository.GetAll.Where(product => product.IsActive == 1).Select(f =>
-				new ProductDto()
-				{
-					Id = f.Id,
-					IsActive = f.IsActive,
-					ProductName = f.ProductName,
-					Price = f.Price
-				});
+			var q = _productRepository.GetAllNoTracking;
+			if (isActive is not null)
+			{
+				q = q.Where(product => product.IsActive == isActive);
+			}
+			var products = q.Select(product => product.AsDto());
+
 			return products.ToList();
 		}
 
-		public ProductDto CreateProduct(CreateProductDto product)
+		public ProductDto CreateProduct(CreateProductDto createProductDto)
 		{
-			var newCustomer = _productRepository.InsertWithoutCommit(new Product()
-			{
-				ProductName = product.ProductName,
-				Price = product.Price,
-			});
+			var newProduct = _productRepository.InsertWithoutCommit(createProductDto.AsProduct());
 
 			_productRepository.Commit();
 
-			return new ProductDto()
-			{
-				Id = newCustomer.Id,
-				ProductName = product.ProductName,
-				Price = product.Price,
-				IsActive = newCustomer.IsActive,
-			};
+			return newProduct.AsDto();
 		}
 
-		public int UpdateProduct(int id, UpdateProductDto product)
+		public void UpdateProduct(int id, UpdateProductDto updateProductDto)
 		{
-			return _productRepository.Update(new Product()
-			{
-				Id = id,
-				ProductName = product.ProductName,
-				Price = product.Price,
-			});
+			_productRepository.Update(updateProductDto.AsProduct(id));
 		}
 
-		public int DeleteProduct(int id)
+		public void DeleteProduct(int id)
 		{
-			return _productRepository.Delete(new Product()
+			_productRepository.Delete(new Product()
 			{
 				Id = id,
 			});

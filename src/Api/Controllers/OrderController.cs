@@ -1,5 +1,4 @@
-﻿using System;
-using Application.Orders.Model;
+﻿using Application.Orders.Model;
 using Microsoft.AspNetCore.Mvc;
 using Application.Orders.Services;
 
@@ -14,19 +13,24 @@ namespace Api.Controllers
 			_orderService = orderService;
 		}
 
-		[HttpPost]
-		public IActionResult CreateOrder(CreateOrderDto order)
+		[HttpGet("{id:int}")]
+		public ActionResult<OrderDto> GetOrder(int id)
 		{
-			// TODO: input validation
-
-			var data = _orderService.CreateOrder(order);
-
+			var data = _orderService.GetOrder(id);
 			if (data is null)
 			{
-				return BadRequest();
+				return NotFound();
 			}
 
-			return Created((new Uri($"{Request.Path}/{data.Id}", UriKind.Relative)), data);
+			return Ok(data);
+		}
+
+		[HttpPost]
+		public ActionResult<OrderDto> CreateOrder(CreateOrderDto createOrderDto)
+		{
+			var order = _orderService.CreateOrder(createOrderDto);
+
+			return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
 		}
 	}
 }

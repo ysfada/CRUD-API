@@ -5,10 +5,10 @@ namespace Application.Products.Services
 {
 	public interface IProductService
 	{
-		ProductDto GetProductById(int id);
-		List<ProductDto> GetProducts();
-		ProductDto CreateProduct(CreateProductDto product);
-		int UpdateProduct(int id, UpdateProductDto product);
-		int DeleteProduct(int id);
+		ProductDto GetProduct(int id);
+		IEnumerable<ProductDto> GetProducts(short? isActive);
+		ProductDto CreateProduct(CreateProductDto createProductDto);
+		void UpdateProduct(int id, UpdateProductDto updateProductDto);
+		void DeleteProduct(int id);
 	}
 }

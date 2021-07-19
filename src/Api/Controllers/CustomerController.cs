@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Application.Customers.Model;
 using Application.Customers.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +15,9 @@ namespace Api.Controllers
 		}
 
 		[HttpGet("{id:int}")]
-		public IActionResult Get(int id)
+		public ActionResult<CustomerDto> GetCustomer(int id)
 		{
-			var data = _customerService.GetCustomerById(id);
+			var data = _customerService.GetCustomer(id);
 			if (data is null)
 			{
 				return NotFound();
@@ -27,50 +27,45 @@ namespace Api.Controllers
 		}
 
 		[HttpGet]
-		public IActionResult GetAll()
+		public IEnumerable<CustomerDto> GetCustomers([FromQuery(Name = "isActive")] short? isActive)
 		{
-			var data = _customerService.GetCustomers();
-			return Ok(data);
+			return _customerService.GetCustomers(isActive);
 		}
 
 		[HttpPost]
-		public IActionResult Create(CreateCustomerDto customer)
+		public ActionResult<CustomerDto> CreateCustomer(CreateCustomerDto createCustomerDto)
 		{
-			// TODO: validate input and return appropriate status code
+			var customer = _customerService.CreateCustomer(createCustomerDto);
 
-			var data = _customerService.CreateCustomer(customer);
-			if (data is null)
-			{
-				return BadRequest();
-			}
-
-			return Created((new Uri($"{Request.Path}/{data.Id}", UriKind.Relative)), data);
+			return CreatedAtAction(nameof(GetCustomer), new {id = customer.Id}, customer);
 		}
 
 		[HttpPut("{id:int}")]
-		public IActionResult Update(int id, UpdateCustomerDto customer)
+		public IActionResult UpdateCustomer(int id, UpdateCustomerDto updateCustomerDto)
 		{
-			// TODO: validate input and return appropriate status code
+			var existingCustomer = _customerService.GetCustomer(id);
 
-			var done = _customerService.UpdateCustomer(id, customer);
-			if (done < 0)
+			if (existingCustomer is null)
 			{
-				return BadRequest();
+				return NotFound();
 			}
+
+			_customerService.UpdateCustomer(id, updateCustomerDto);
 
 			return NoContent();
 		}
 
 		[HttpDelete("{id:int}")]
-		public IActionResult Delete(int id)
+		public IActionResult DeleteCustomer(int id)
 		{
-			// TODO: validate input and return appropriate status code
+			var existingCustomer = _customerService.GetCustomer(id);
 
-			var done = _customerService.DeleteCustomer(id);
-			if (done < 0)
+			if (existingCustomer is null)
 			{
-				return BadRequest();
+				return NotFound();
 			}
+
+			_customerService.DeleteCustomer(id);
 
 			return NoContent();
 		}
