@@ -21,14 +21,14 @@ namespace Application.Orders.Services
 			};
 		}
 
-		public static Order AsOrder(this UpdateOrderDto updateOrderDto, int id)
+		public static Order AsOrder(this OrderDto orderDto)
 		{
 			return new()
 			{
-				Id = id,
-				Quantity = updateOrderDto.Quantity,
-				CustomerId = updateOrderDto.CustomerId,
-				ProductId = updateOrderDto.ProductId,
+				Id = orderDto.Id,
+				Quantity = orderDto.Quantity,
+				CustomerId = orderDto.CustomerId,
+				ProductId = orderDto.ProductId,
 			};
 		}
 

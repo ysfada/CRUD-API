@@ -52,14 +52,14 @@ namespace Api.Controllers
 				return NotFound();
 			}
 
-			try
+			var updatedOrder = existingOrder with
 			{
-				_orderService.UpdateOrder(id, updateOrderDto);
-			}
-			catch (Exception e)
-			{
-				return StatusCode(StatusCodes.Status500InternalServerError, e);
-			}
+				CustomerId = updateOrderDto.CustomerId,
+				ProductId = updateOrderDto.ProductId,
+				Quantity = updateOrderDto.Quantity,
+			};
+
+			_orderService.UpdateOrder(updatedOrder);
 
 			return NoContent();
 		}

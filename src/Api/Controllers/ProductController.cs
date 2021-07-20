@@ -50,7 +50,14 @@ namespace Api.Controllers
 				return NotFound();
 			}
 
-			_productService.UpdateProduct(id, updateProductDto);
+			var updatedProduct = existingProduct with
+			{
+				ProductName = updateProductDto.ProductName,
+				Price = updateProductDto.Price,
+				IsActive = updateProductDto.IsActive,
+			};
+
+			_productService.UpdateProduct(updatedProduct);
 
 			return NoContent();
 		}

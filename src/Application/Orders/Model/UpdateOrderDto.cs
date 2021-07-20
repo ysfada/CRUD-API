@@ -2,7 +2,7 @@
 
 namespace Application.Orders.Model
 {
-	public class UpdateOrderDto
+	public record UpdateOrderDto
 	{
 		[Required]
 		public int CustomerId { get; set; }

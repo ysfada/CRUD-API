@@ -2,7 +2,7 @@
 
 namespace Domain.Entities
 {
-	public class Order : BaseEntity
+	public record Order : BaseEntity
 	{
 		public int CustomerId { get; set; }
 		public int ProductId { get; set; }

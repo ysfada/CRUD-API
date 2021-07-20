@@ -2,7 +2,7 @@
 
 namespace Application.Products.Model
 {
-	public class CreateProductDto
+	public record CreateProductDto
 	{
 		[Required]
 		public string ProductName { get; set; }

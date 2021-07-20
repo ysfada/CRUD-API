@@ -8,7 +8,7 @@ namespace Application.Customers.Services
 		CustomerDto GetCustomer(int id, short? isActive = null);
 		IEnumerable<CustomerDto> GetCustomers(short? isActive = null);
 		CustomerDto CreateCustomer(CreateCustomerDto createCustomerDto);
-		void UpdateCustomer(int id, UpdateCustomerDto updateCustomerDto);
+		void UpdateCustomer(CustomerDto customerDto);
 		void DeleteCustomer(int id);
 	}
 }

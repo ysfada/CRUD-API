@@ -1,6 +1,6 @@
 ﻿namespace Application.Products.Model
 {
-	public class ProductDto
+	public record ProductDto
 	{
 		public int Id { get; set; }
 		public string ProductName { get; set; }

@@ -8,7 +8,7 @@ namespace Application.Orders.Services
 		OrderDto GetOrder(int id, short? isActive = null);
 		IEnumerable<OrderDto> GetOrders(short? isActive = null);
 		OrderDto CreateOrder(CreateOrderDto createOrderDto);
-		void UpdateOrder(int id, UpdateOrderDto updateOrderDto);
+		void UpdateOrder(OrderDto orderDto);
 		void DeleteOrder(int id);
 	}
 }

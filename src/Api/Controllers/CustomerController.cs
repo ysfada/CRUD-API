@@ -50,7 +50,14 @@ namespace Api.Controllers
 				return NotFound();
 			}
 
-			_customerService.UpdateCustomer(id, updateCustomerDto);
+			var updatedCustomer = existingCustomer with
+			{
+				FirstName = updateCustomerDto.FirstName,
+				LastName = updateCustomerDto.LastName,
+				IsActive = updateCustomerDto.IsActive,
+			};
+
+			_customerService.UpdateCustomer(updatedCustomer);
 
 			return NoContent();
 		}

@@ -3,7 +3,7 @@ using Application.Products.Model;
 
 namespace Application.Orders.Model
 {
-	public class OrderDto
+	public record OrderDto
 	{
 		public int Id { get; set; }
 		public int CustomerId { get; set; }

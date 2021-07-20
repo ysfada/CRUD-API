@@ -8,7 +8,7 @@ namespace Application.Products.Services
 		ProductDto GetProduct(int id, short? isActive = null);
 		IEnumerable<ProductDto> GetProducts(short? isActive = null);
 		ProductDto CreateProduct(CreateProductDto createProductDto);
-		void UpdateProduct(int id, UpdateProductDto updateProductDto);
+		void UpdateProduct(ProductDto productDto);
 		void DeleteProduct(int id);
 	}
 }

@@ -43,9 +43,9 @@ namespace Application.Customers.Services
 			return newCustomer.AsDto();
 		}
 
-		public void UpdateCustomer(int id, UpdateCustomerDto updateCustomerDto)
+		public void UpdateCustomer(CustomerDto customerDto)
 		{
-			_customerRepository.Update(updateCustomerDto.AsCustomer(id));
+			_customerRepository.Update(customerDto.AsCustomer());
 		}
 
 		public void DeleteCustomer(int id)

@@ -1,7 +1,7 @@
 ﻿namespace Application.Customers.Model
 {
 	// Automapperda kullandığımız Data Transfer Object 
-	public class CustomerDto
+	public record CustomerDto
 	{
 		public int Id { get; set; }
 		public string FirstName { get; set; }

@@ -2,7 +2,7 @@
 
 namespace Application.Customers.Model
 {
-	public class UpdateCustomerDto
+	public record UpdateCustomerDto
 	{
 		[Required]
 		public string FirstName { get; set; }

@@ -43,9 +43,9 @@ namespace Application.Products.Services
 			return newProduct.AsDto();
 		}
 
-		public void UpdateProduct(int id, UpdateProductDto updateProductDto)
+		public void UpdateProduct(ProductDto productDto)
 		{
-			_productRepository.Update(updateProductDto.AsProduct(id));
+			_productRepository.Update(productDto.AsProduct());
 		}
 
 		public void DeleteProduct(int id)

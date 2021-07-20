@@ -16,14 +16,14 @@ namespace Application.Products.Services
 			};
 		}
 
-		public static Product AsProduct(this UpdateProductDto updateProductDto, int id)
+		public static Product AsProduct(this ProductDto productDto)
 		{
 			return new()
 			{
-				Id = id,
-				ProductName = updateProductDto.ProductName,
-				Price = updateProductDto.Price,
-				IsActive = updateProductDto.IsActive,
+				Id = productDto.Id,
+				ProductName = productDto.ProductName,
+				Price = productDto.Price,
+				IsActive = productDto.IsActive,
 			};
 		}
 

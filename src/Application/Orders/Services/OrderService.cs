@@ -49,9 +49,9 @@ namespace Application.Orders.Services
 			return newOrder.AsDto();
 		}
 
-		public void UpdateOrder(int id, UpdateOrderDto updateOrderDto)
+		public void UpdateOrder(OrderDto orderDto)
 		{
-			_orderRepository.Update(updateOrderDto.AsOrder(id));
+			_orderRepository.Update(orderDto.AsOrder());
 		}
 
 		public void DeleteOrder(int id)

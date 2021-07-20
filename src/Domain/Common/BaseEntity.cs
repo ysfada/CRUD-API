@@ -5,7 +5,7 @@ namespace Domain.Common
 	/// <summary>
 	/// Tüm projelerimizde ortak olan default fieldlarımız. Abstarct olarak tanımlıyoruz new yapılarak kullanılmaması için. 
 	/// </summary>
-	public abstract class BaseEntity
+	public abstract record BaseEntity
 	{
 		public int Id { get; set; }
 

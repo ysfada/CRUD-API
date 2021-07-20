@@ -6,7 +6,7 @@ namespace Domain.Entities
 	/// <summary>
 	/// Tüm entitylerimiz BaseEntity'den türemesi gerekiyor. Aksi  taktirde Repository Patternde kullanamayız. 
 	/// </summary>
-	public class Customer : BaseEntity
+	public record Customer : BaseEntity
 	{
 		public string FirstName { get; set; }
 		public string LastName { get; set; }

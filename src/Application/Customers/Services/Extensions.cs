@@ -17,14 +17,15 @@ namespace Application.Customers.Services
 			};
 		}
 
-		public static Customer AsCustomer(this UpdateCustomerDto updateCustomerDto, int id)
+		public static Customer AsCustomer(this CustomerDto customerDto)
 		{
 			return new()
 			{
-				Id = id,
-				FirstName = updateCustomerDto.FirstName,
-				LastName = updateCustomerDto.LastName,
-				IsActive = updateCustomerDto.IsActive,
+				Id = customerDto.Id,
+				FirstName = customerDto.FirstName,
+				LastName = customerDto.LastName,
+				IsActive = customerDto.IsActive,
+				ExternalId = customerDto.ExternalId
 			};
 		}
 
