@@ -1,6 +1,6 @@
 import { readonly, ref } from "@vue/composition-api";
 import { ICreateProduct, IProduct, IUpdateProduct } from "@/@types/product";
-import useState from "./state";
+import useState from "./useState";
 
 export default function useProduct() {
   const { baseURL } = useState();
@@ -18,7 +18,7 @@ export default function useProduct() {
   });
 
   async function getAll() {
-    const response = await fetch(`${baseURL.value}/Product`);
+    const response = await fetch(`${baseURL.value}/product`);
     const clone = response.clone();
     if (clone.ok) {
       products.value = await clone.json();
@@ -27,7 +27,7 @@ export default function useProduct() {
   }
 
   async function removeById(id: number) {
-    const response = await fetch(`${baseURL.value}/Product/${id}`, {
+    const response = await fetch(`${baseURL.value}/product/${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
@@ -43,7 +43,7 @@ export default function useProduct() {
   }
 
   async function updateById(id: number, product: IUpdateProduct) {
-    const response = await fetch(`${baseURL.value}/Product/${id}`, {
+    const response = await fetch(`${baseURL.value}/product/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(product),
@@ -60,7 +60,7 @@ export default function useProduct() {
   }
 
   async function create(product: ICreateProduct) {
-    const response = await fetch(`${baseURL.value}/Product`, {
+    const response = await fetch(`${baseURL.value}/product`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(product),

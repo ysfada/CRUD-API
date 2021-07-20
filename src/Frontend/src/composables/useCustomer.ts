@@ -1,6 +1,6 @@
 import { readonly, ref } from "@vue/composition-api";
 import { ICreateCustomer, ICustomer, IUpdateCustomer } from "@/@types/customer";
-import useState from "./state";
+import useState from "./useState";
 
 export default function useCustomer() {
   const { baseURL } = useState();
@@ -18,7 +18,7 @@ export default function useCustomer() {
   });
 
   async function getAll() {
-    const response = await fetch(`${baseURL.value}/Customer`);
+    const response = await fetch(`${baseURL.value}/customer`);
     const clone = response.clone();
     if (clone.ok) {
       customers.value = await clone.json();
@@ -27,7 +27,7 @@ export default function useCustomer() {
   }
 
   async function removeById(id: number) {
-    const response = await fetch(`${baseURL.value}/Customer/${id}`, {
+    const response = await fetch(`${baseURL.value}/customer/${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
@@ -43,7 +43,7 @@ export default function useCustomer() {
   }
 
   async function updateById(id: number, customer: IUpdateCustomer) {
-    const response = await fetch(`${baseURL.value}/Customer/${id}`, {
+    const response = await fetch(`${baseURL.value}/customer/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(customer),
@@ -60,7 +60,7 @@ export default function useCustomer() {
   }
 
   async function create(customer: ICreateCustomer) {
-    const response = await fetch(`${baseURL.value}/Customer`, {
+    const response = await fetch(`${baseURL.value}/customer`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(customer),
