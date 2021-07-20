@@ -71,6 +71,19 @@ namespace Infrastructure.Persistence.EntityFramework
             return Commit();
         }
 
+        public async Task<int> DeleteAsync(T entity)
+        {
+	        try
+	        {
+		        _context.Set<T>().Remove(entity);
+		        return await _context.SaveChangesAsync();
+	        }
+	        catch
+	        {
+		        return -1;
+	        }
+        }
+
         public int DeleteBulk(IEnumerable<T> entities)
         {
             if (entities == null)

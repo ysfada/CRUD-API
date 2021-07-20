@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Application.Customers.Model;
 using Application.Customers.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +16,9 @@ namespace Api.Controllers
 		}
 
 		[HttpGet("{id:int}")]
-		public ActionResult<CustomerDto> GetCustomer(int id)
+		public async Task<ActionResult<CustomerDto>> GetCustomerAsync(int id)
 		{
-			var data = _customerService.GetCustomer(id);
+			var data = await _customerService.GetCustomerAsync(id);
 			if (data is null)
 			{
 				return NotFound();
@@ -27,23 +28,23 @@ namespace Api.Controllers
 		}
 
 		[HttpGet]
-		public IEnumerable<CustomerDto> GetCustomers([FromQuery(Name = "isActive")] short? isActive)
+		public async Task<IEnumerable<CustomerDto>> GetCustomersAsync([FromQuery(Name = "isActive")] short? isActive)
 		{
-			return _customerService.GetCustomers(isActive);
+			return await _customerService.GetCustomersAsync(isActive);
 		}
 
 		[HttpPost]
-		public ActionResult<CustomerDto> CreateCustomer(CreateCustomerDto createCustomerDto)
+		public async Task<ActionResult<CustomerDto>> CreateCustomerAsync(CreateCustomerDto createCustomerDto)
 		{
-			var customer = _customerService.CreateCustomer(createCustomerDto);
+			var customer = await _customerService.CreateCustomerAsync(createCustomerDto);
 
-			return CreatedAtAction(nameof(GetCustomer), new {id = customer.Id}, customer);
+			return CreatedAtAction(nameof(GetCustomerAsync), new {id = customer.Id}, customer);
 		}
 
 		[HttpPut("{id:int}")]
-		public IActionResult UpdateCustomer(int id, UpdateCustomerDto updateCustomerDto)
+		public async Task<IActionResult> UpdateCustomerAsync(int id, UpdateCustomerDto updateCustomerDto)
 		{
-			var existingCustomer = _customerService.GetCustomer(id);
+			var existingCustomer = await _customerService.GetCustomerAsync(id);
 
 			if (existingCustomer is null)
 			{
@@ -57,22 +58,22 @@ namespace Api.Controllers
 				IsActive = updateCustomerDto.IsActive,
 			};
 
-			_customerService.UpdateCustomer(updatedCustomer);
+			await _customerService.UpdateCustomerAsync(updatedCustomer);
 
 			return NoContent();
 		}
 
 		[HttpDelete("{id:int}")]
-		public IActionResult DeleteCustomer(int id)
+		public async Task<IActionResult> DeleteCustomerAsync(int id)
 		{
-			var existingCustomer = _customerService.GetCustomer(id);
+			var existingCustomer = await _customerService.GetCustomerAsync(id);
 
 			if (existingCustomer is null)
 			{
 				return NotFound();
 			}
 
-			_customerService.DeleteCustomer(id);
+			await _customerService.DeleteCustomerAsync(id);
 
 			return NoContent();
 		}

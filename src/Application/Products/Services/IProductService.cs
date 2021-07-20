@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Application.Products.Model;
 
 namespace Application.Products.Services
 {
 	public interface IProductService
 	{
-		ProductDto GetProduct(int id, short? isActive = null);
-		IEnumerable<ProductDto> GetProducts(short? isActive = null);
-		ProductDto CreateProduct(CreateProductDto createProductDto);
-		void UpdateProduct(ProductDto productDto);
-		void DeleteProduct(int id);
+		Task<ProductDto> GetProductAsync(int id, short? isActive = null);
+		Task<IEnumerable<ProductDto>> GetProductsAsync(short? isActive = null);
+		Task<ProductDto> CreateProductAsync(CreateProductDto createProductDto);
+		Task UpdateProductAsync(ProductDto productDto);
+		Task DeleteProductAsync(int id);
 	}
 }

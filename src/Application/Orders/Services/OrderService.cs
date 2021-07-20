@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Application.Orders.Model;
 using Domain.Entities;
 using Infrastructure.Persistence;
@@ -16,16 +18,16 @@ namespace Application.Orders.Services
 			_orderRepository = orderRepository;
 		}
 
-		public OrderDto GetOrder(int id, short? isActive = null)
+		public async Task<OrderDto> GetOrderAsync(int id, short? isActive = null)
 		{
-			var order = _orderRepository.GetAllNoTracking
+			var order = await _orderRepository.GetAllNoTracking
 				.Include(o => o.Customer)
 				.Include(o => o.Product)
-				.FirstOrDefault(c => c.Id == id && c.IsActive == 1);
+				.FirstOrDefaultAsync(c => c.Id == id && c.IsActive == 1);
 			return order?.AsDto();
 		}
 
-		public IEnumerable<OrderDto> GetOrders(short? isActive = null)
+		public async Task<IEnumerable<OrderDto>> GetOrdersAsync(short? isActive = null)
 		{
 			var q = _orderRepository.GetAllNoTracking;
 			if (isActive is not null)
@@ -37,26 +39,27 @@ namespace Application.Orders.Services
 				.Include(o => o.Product)
 				.Select(order => order.AsDto());
 
-			return orders.ToList();
+			return await orders.ToListAsync();
 		}
 
-		public OrderDto CreateOrder(CreateOrderDto createOrderDto)
+		public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createOrderDto)
 		{
 			var newOrder = _orderRepository.InsertWithoutCommit(createOrderDto.AsOrder());
 
-			_orderRepository.Commit();
+			await _orderRepository.CommitAsync(CancellationToken.None);
 
 			return newOrder.AsDto();
 		}
 
-		public void UpdateOrder(OrderDto orderDto)
+		public async Task UpdateOrderAsync(OrderDto orderDto)
 		{
-			_orderRepository.Update(orderDto.AsOrder());
+			_orderRepository.UpdateWithoutCommit(orderDto.AsOrder());
+			await _orderRepository.CommitAsync(CancellationToken.None);
 		}
 
-		public void DeleteOrder(int id)
+		public async Task DeleteOrderAsync(int id)
 		{
-			_orderRepository.Delete(new Order()
+			await _orderRepository.DeleteAsync(new Order()
 			{
 				Id = id,
 			});

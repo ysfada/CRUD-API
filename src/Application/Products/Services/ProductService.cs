@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Application.Products.Model;
 using Domain.Entities;
 using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Products.Services
 {
@@ -15,14 +18,14 @@ namespace Application.Products.Services
 			_productRepository = productRepository;
 		}
 
-		public ProductDto GetProduct(int id, short? isActive = null)
+		public async Task<ProductDto> GetProductAsync(int id, short? isActive = null)
 		{
 			var q = _productRepository.GetAllNoTracking.Where(p => p.Id == id);
-			var product = isActive is null ? q.FirstOrDefault() : q.FirstOrDefault(p => p.IsActive == 1);
+			var product = isActive is null ? await q.FirstOrDefaultAsync() : await q.FirstOrDefaultAsync(p => p.IsActive == 1);
 			return product?.AsDto();
 		}
 
-		public IEnumerable<ProductDto> GetProducts(short? isActive = null)
+		public async Task<IEnumerable<ProductDto>> GetProductsAsync(short? isActive = null)
 		{
 			var q = _productRepository.GetAllNoTracking;
 			if (isActive is not null)
@@ -31,26 +34,27 @@ namespace Application.Products.Services
 			}
 			var products = q.Select(product => product.AsDto());
 
-			return products.ToList();
+			return await products.ToListAsync();
 		}
 
-		public ProductDto CreateProduct(CreateProductDto createProductDto)
+		public async Task<ProductDto> CreateProductAsync(CreateProductDto createProductDto)
 		{
 			var newProduct = _productRepository.InsertWithoutCommit(createProductDto.AsProduct());
 
-			_productRepository.Commit();
+			await _productRepository.CommitAsync(CancellationToken.None);
 
 			return newProduct.AsDto();
 		}
 
-		public void UpdateProduct(ProductDto productDto)
+		public async Task UpdateProductAsync(ProductDto productDto)
 		{
-			_productRepository.Update(productDto.AsProduct());
+			_productRepository.UpdateWithoutCommit(productDto.AsProduct());
+			await _productRepository.CommitAsync(CancellationToken.None);
 		}
 
-		public void DeleteProduct(int id)
+		public async Task DeleteProductAsync(int id)
 		{
-			_productRepository.Delete(new Product()
+			await _productRepository.DeleteAsync(new Product()
 			{
 				Id = id,
 			});

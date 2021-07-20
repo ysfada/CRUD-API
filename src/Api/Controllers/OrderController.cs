@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Application.Orders.Model;
 using Microsoft.AspNetCore.Mvc;
 using Application.Orders.Services;
-using Microsoft.AspNetCore.Http;
 
 namespace Api.Controllers
 {
@@ -17,9 +16,9 @@ namespace Api.Controllers
 		}
 
 		[HttpGet("{id:int}")]
-		public ActionResult<OrderDto> GetOrder(int id)
+		public async Task<ActionResult<OrderDto>> GetOrderAsync(int id)
 		{
-			var data = _orderService.GetOrder(id);
+			var data = await _orderService.GetOrderAsync(id);
 			if (data is null)
 			{
 				return NotFound();
@@ -29,23 +28,23 @@ namespace Api.Controllers
 		}
 
 		[HttpGet]
-		public IEnumerable<OrderDto> GetOrders([FromQuery(Name = "isActive")] short? isActive)
+		public async Task<IEnumerable<OrderDto>> GetOrdersAsync([FromQuery(Name = "isActive")] short? isActive)
 		{
-			return _orderService.GetOrders(isActive);
+			return await _orderService.GetOrdersAsync(isActive);
 		}
 
 		[HttpPost]
-		public ActionResult<OrderDto> CreateOrder(CreateOrderDto createOrderDto)
+		public async Task<ActionResult<OrderDto>> CreateOrderAsync(CreateOrderDto createOrderDto)
 		{
-			var order = _orderService.CreateOrder(createOrderDto);
+			var order = await _orderService.CreateOrderAsync(createOrderDto);
 
-			return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
+			return CreatedAtAction(nameof(GetOrderAsync), new { id = order.Id }, order);
 		}
 
 		[HttpPut("{id:int}")]
-		public IActionResult UpdateOrder(int id, UpdateOrderDto updateOrderDto)
+		public async Task<IActionResult> UpdateOrderAsync(int id, UpdateOrderDto updateOrderDto)
 		{
-			var existingOrder = _orderService.GetOrder(id);
+			var existingOrder = await _orderService.GetOrderAsync(id);
 
 			if (existingOrder is null)
 			{
@@ -59,22 +58,22 @@ namespace Api.Controllers
 				Quantity = updateOrderDto.Quantity,
 			};
 
-			_orderService.UpdateOrder(updatedOrder);
+			await _orderService.UpdateOrderAsync(updatedOrder);
 
 			return NoContent();
 		}
 
 		[HttpDelete("{id:int}")]
-		public IActionResult DeleteOrder(int id)
+		public async Task<IActionResult> DeleteOrder(int id)
 		{
-			var existingOrder = _orderService.GetOrder(id);
+			var existingOrder = await _orderService.GetOrderAsync(id);
 
 			if (existingOrder is null)
 			{
 				return NotFound();
 			}
 
-			_orderService.DeleteOrder(id);
+			await _orderService.DeleteOrderAsync(id);
 
 			return NoContent();
 		}

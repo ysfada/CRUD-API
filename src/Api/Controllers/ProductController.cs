@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Application.Products.Model;
 using Microsoft.AspNetCore.Mvc;
 using Application.Products.Services;
@@ -15,9 +16,9 @@ namespace Api.Controllers
 		}
 
 		[HttpGet("{id:int}")]
-		public ActionResult<ProductDto> GetProduct([FromQuery(Name = "isActive")] short? isActive, int id)
+		public async Task<ActionResult<ProductDto>> GetProductAsync([FromQuery(Name = "isActive")] short? isActive, int id)
 		{
-			var data = _productService.GetProduct(id, isActive);
+			var data = await _productService.GetProductAsync(id, isActive);
 			if (data is null)
 			{
 				return NotFound();
@@ -27,23 +28,23 @@ namespace Api.Controllers
 		}
 
 		[HttpGet]
-		public IEnumerable<ProductDto> GetProducts([FromQuery(Name = "isActive")] short? isActive)
+		public async Task<IEnumerable<ProductDto>> GetProductsAsync([FromQuery(Name = "isActive")] short? isActive)
 		{
-			return _productService.GetProducts(isActive);
+			return await _productService.GetProductsAsync(isActive);
 		}
 
 		[HttpPost]
-		public ActionResult<ProductDto> CreateProduct(CreateProductDto createProductDto)
+		public async Task<ActionResult<ProductDto>> CreateProductAsync(CreateProductDto createProductDto)
 		{
-			var product = _productService.CreateProduct(createProductDto);
+			var product = await _productService.CreateProductAsync(createProductDto);
 
-			return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+			return CreatedAtAction(nameof(GetProductAsync), new { id = product.Id }, product);
 		}
 
 		[HttpPut("{id:int}")]
-		public IActionResult UpdateProduct(int id, UpdateProductDto updateProductDto)
+		public async Task<IActionResult> UpdateProductAsync(int id, UpdateProductDto updateProductDto)
 		{
-			var existingProduct = _productService.GetProduct(id);
+			var existingProduct = await _productService.GetProductAsync(id);
 
 			if (existingProduct is null)
 			{
@@ -57,22 +58,22 @@ namespace Api.Controllers
 				IsActive = updateProductDto.IsActive,
 			};
 
-			_productService.UpdateProduct(updatedProduct);
+			await _productService.UpdateProductAsync(updatedProduct);
 
 			return NoContent();
 		}
 
 		[HttpDelete("{id:int}")]
-		public IActionResult DeleteProduct(int id)
+		public async Task<IActionResult> DeleteProductAsync(int id)
 		{
-			var existingProduct = _productService.GetProduct(id);
+			var existingProduct = await _productService.GetProductAsync(id);
 
 			if (existingProduct is null)
 			{
 				return NotFound();
 			}
 
-			_productService.DeleteProduct(id);
+			await _productService.DeleteProductAsync(id);
 
 			return NoContent();
 		}

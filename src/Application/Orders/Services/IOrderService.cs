@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Application.Orders.Model;
 
 namespace Application.Orders.Services
 {
 	public interface IOrderService
 	{
-		OrderDto GetOrder(int id, short? isActive = null);
-		IEnumerable<OrderDto> GetOrders(short? isActive = null);
-		OrderDto CreateOrder(CreateOrderDto createOrderDto);
-		void UpdateOrder(OrderDto orderDto);
-		void DeleteOrder(int id);
+		Task<OrderDto> GetOrderAsync(int id, short? isActive = null);
+		Task<IEnumerable<OrderDto>> GetOrdersAsync(short? isActive = null);
+		Task<OrderDto> CreateOrderAsync(CreateOrderDto createOrderDto);
+		Task UpdateOrderAsync(OrderDto orderDto);
+		Task DeleteOrderAsync(int id);
 	}
 }

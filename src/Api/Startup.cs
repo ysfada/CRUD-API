@@ -31,7 +31,10 @@ namespace Api
 			services.AddMyContext(Configuration);
 
 			services.AddOptions();
-			services.AddControllers();
+			services.AddControllers(options =>
+			{
+				options.SuppressAsyncSuffixInActionNames = false;
+			});
 			services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "Api", Version = "v1"}); });
 		}
 

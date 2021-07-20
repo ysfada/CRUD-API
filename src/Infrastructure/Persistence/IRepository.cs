@@ -30,6 +30,8 @@ namespace Infrastructure.Persistence
 
         int Delete(T entity);
 
+        Task<int> DeleteAsync(T entity);
+
         int Remove(T entity);
 
         int Commit();

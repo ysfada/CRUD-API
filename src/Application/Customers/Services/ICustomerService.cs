@@ -1,14 +1,15 @@
 ﻿using Application.Customers.Model;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Application.Customers.Services
 {
 	public interface ICustomerService
 	{
-		CustomerDto GetCustomer(int id, short? isActive = null);
-		IEnumerable<CustomerDto> GetCustomers(short? isActive = null);
-		CustomerDto CreateCustomer(CreateCustomerDto createCustomerDto);
-		void UpdateCustomer(CustomerDto customerDto);
-		void DeleteCustomer(int id);
+		Task<CustomerDto> GetCustomerAsync(int id, short? isActive = null);
+		Task<IEnumerable<CustomerDto>> GetCustomersAsync(short? isActive = null);
+		Task<CustomerDto> CreateCustomerAsync(CreateCustomerDto createCustomerDto);
+		Task UpdateCustomerAsync(CustomerDto customerDto);
+		Task DeleteCustomerAsync(int id);
 	}
 }
