@@ -1,20 +1,76 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# CRUD-API
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+A demo API for creating, retrieving, updating and deleting customer, product and order entities.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## Run Locally
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+Clone the project
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
+```bash
+  git clone https://github.com/ysfada/CRUD-API.git
+```
+
+Start the API
+
+```bash
+  cd ./CRUD-API/src
+  dotnet run --project Api
+```
+
+API runs at [http://localhost:5000/swagger](http://localhost:5000/swagger)
+
+Install frontend dependencies and serve
+
+```bash
+  cd ./CRUD-API/src/Frontend
+  npm install
+  npm run serve
+```
+
+Frontend runs at [http://localhost:8080](http://localhost:8080)
+
+## API Reference
+
+### Customer
+
+```http
+  GET /api/customer
+  POST /api/customer
+  GET /api/customer/${id}
+  PUT /api/customer/${id}
+  DELETE /api/customer/${id}
+```
+
+### Product
+
+```http
+  GET /api/product
+  POST /api/product
+  GET /api/product/${id}
+  PUT /api/product/${id}
+  DELETE /api/product/${id}
+```
+
+### Order
+
+```http
+  GET /api/order
+  POST /api/order
+  GET /api/order/${id}
+  PUT /api/order/${id}
+  DELETE /api/order/${id}
+```
+
+## Screenshots
+
+![App Screenshot 1](./screenshot/customer-1.png)
+![App Screenshot 2](./screenshot/product-1.png)
+![App Screenshot 3](./screenshot/order-1.png)
+![App Screenshot 4](./screenshot/order-2.png)
+
+## Acknowledgements
+
 - [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+- [Vue.js](https://github.com/vuejs/vue)
+- [The easiest way to create a README](https://readme.so/editor)
+- [Create useful .gitignore files for your project](https://www.toptal.com/developers/gitignore)
