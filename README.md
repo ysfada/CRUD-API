@@ -10,7 +10,16 @@ Clone the project
   git clone https://github.com/ysfada/CRUD-API.git
 ```
 
-Start the API
+### Migrations
+
+*Don't forget to set DefaultConnection in appsettings.json
+
+```bash
+  cd ./CRUD-API/src/Infrastructure
+  dotnet ef --startup-project ../Api database update
+```
+
+### Start the API
 
 ```bash
   cd ./CRUD-API/src
@@ -19,7 +28,7 @@ Start the API
 
 API runs at [http://localhost:5000/swagger](http://localhost:5000/swagger)
 
-Install frontend dependencies and serve
+### Install frontend dependencies and serve
 
 ```bash
   cd ./CRUD-API/src/Frontend
