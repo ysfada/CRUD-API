@@ -81,5 +81,6 @@ Frontend runs at [http://localhost:8080](http://localhost:8080)
 
 - [ASP.NET Core](https://github.com/aspnet/Home)
 - [Vue.js](https://github.com/vuejs/vue)
+- [Vuetify](https://github.com/vuetifyjs/vuetify)
 - [The easiest way to create a README](https://readme.so/editor)
 - [Create useful .gitignore files for your project](https://www.toptal.com/developers/gitignore)
