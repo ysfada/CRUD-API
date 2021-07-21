@@ -22,7 +22,13 @@
           <v-spacer></v-spacer>
           <v-dialog v-model="formDialog" max-width="500px">
             <template v-slot:activator="{ on, attrs }">
-              <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
+              <v-btn
+                color="primary"
+                dark class="mb-2"
+                v-bind="attrs"
+                v-on="on"
+                @click="isNewProduct = true"
+              >
                 New Product
               </v-btn>
             </template>
@@ -34,20 +40,20 @@
               <v-card-text>
                 <v-container>
                   <v-row>
-                    <v-col cols="12" sm="6" md="4">
+                    <v-col v-show="!isNewProduct" cols="12" sm="6">
                       <v-text-field
                         v-model="editedProduct.id"
                         readonly
                         label="Id"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6" md="4">
+                    <v-col cols="12" sm="6">
                       <v-text-field
                         v-model="editedProduct.productName"
                         label="Product name"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6" md="4">
+                    <v-col cols="12" sm="6">
                       <v-text-field
                         v-model="editedProduct.price"
                         label="Price"
@@ -129,6 +135,7 @@ export default defineComponent({
       create,
     } = useProduct();
 
+    const isNewProduct = ref(true);
     const snack = ref(false);
     const snackColor = ref("");
     const snackText = ref("");
@@ -143,7 +150,7 @@ export default defineComponent({
     ]);
     const editedIndex = ref(-1);
     const formTitle = computed(() =>
-      editedIndex.value === -1 ? "New Product" : "Edit Product"
+      isNewProduct.value ? "New Product" : "Edit Product"
     );
 
     const openSnack = (txt: string, color: string) => {
@@ -153,12 +160,14 @@ export default defineComponent({
     };
 
     const edit = (product: IProduct) => {
+      isNewProduct.value = false;
       editedIndex.value = products.value.indexOf(product);
       editedProduct.value = product;
       formDialog.value = true;
     };
 
     const remove = (product: IProduct) => {
+      isNewProduct.value = false;
       editedIndex.value = products.value.indexOf(product);
       editedProduct.value = product;
       confirmationDialog.value = true;
@@ -261,6 +270,7 @@ export default defineComponent({
     );
 
     return {
+      isNewProduct,
       snack,
       snackText,
       snackColor,

@@ -133,26 +133,26 @@
                 </v-container>
                 <v-container v-else>
                   <v-row>
-                    <v-col cols="12" sm="6" md="4">
+                    <v-col cols="12" sm="6">
                       <v-text-field
                         v-model="editedOrder.id"
                         readonly
                         label="Id"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6" md="4">
+                    <v-col cols="12" sm="6">
                       <v-text-field
                         v-model="editedOrder.productId"
                         label="Product id"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6" md="4">
+                    <v-col cols="12" sm="6">
                       <v-text-field
                         v-model="editedOrder.customerId"
                         label="Customer id"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6" md="4">
+                    <v-col cols="12" sm="6">
                       <v-text-field
                         v-model="editedOrder.quantity"
                         label="Quantity"
