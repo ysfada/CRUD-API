@@ -14,14 +14,6 @@ namespace Infrastructure.Persistence
 		{
 			modelBuilder.ApplyConfigurationsFromAssembly(typeof(CrudDbContext).Assembly);
 
-			modelBuilder.Entity<Order>()
-				.HasOne<Customer>(o => o.Customer)
-				.WithMany(c => c.Orders)
-				.HasForeignKey(o => o.CustomerId);
-
-			modelBuilder.Entity<Order>()
-				.HasOne<Product>(o => o.Product);
-
 			base.OnModelCreating(modelBuilder);
 		}
 

@@ -17,6 +17,12 @@ namespace Infrastructure.Persistence.Configurations
 				.HasDefaultValueSql("GETUTCDATE()")
 				.ValueGeneratedOnAdd()
 				.IsRequired();
+			builder
+				.HasOne<Customer>(o => o.Customer)
+				.WithMany(c => c.Orders)
+				.HasForeignKey(o => o.CustomerId);
+			builder
+				.HasOne<Product>(o => o.Product);
 
 			// TODO: auto-update UpdatedTime column (use trigger)
 		}
