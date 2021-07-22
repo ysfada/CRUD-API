@@ -20,11 +20,17 @@
             hide-details
           ></v-text-field>
           <v-spacer></v-spacer>
-          <v-dialog v-model="formDialog" max-width="500px">
+          <v-dialog
+            v-model="formDialog"
+            max-width="500px"
+            @keydown.esc="closeFormDialog"
+            @click:outside="closeFormDialog"
+          >
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 color="primary"
-                dark class="mb-2"
+                dark
+                class="mb-2"
                 v-bind="attrs"
                 v-on="on"
                 @click="isNewCustomer = true"
@@ -32,47 +38,65 @@
                 New Customer
               </v-btn>
             </template>
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">{{ formTitle }}</span>
-              </v-card-title>
+            <v-form ref="formRef" v-model="valid" lazy-validation>
+              <v-card>
+                <v-card-title>
+                  <span class="text-h5">{{ formTitle }}</span>
+                </v-card-title>
 
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col v-show="!isNewCustomer" cols="12" sm="6">
-                      <v-text-field
-                        v-model="editedCustomer.id"
-                        readonly
-                        label="Id"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6">
-                      <v-text-field
-                        v-model="editedCustomer.firstName"
-                        label="First name"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6">
-                      <v-text-field
-                        v-model="editedCustomer.lastName"
-                        label="Last name"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
+                <v-card-text>
+                  <v-container>
+                    <v-row>
+                      <v-col v-show="!isNewCustomer" cols="12" sm="6">
+                        <v-text-field
+                          v-model="editedCustomer.id"
+                          readonly
+                          required
+                          label="Id"
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                          v-model="editedCustomer.firstName"
+                          label="First name"
+                          :rules="rules"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                          v-model="editedCustomer.lastName"
+                          label="Last name"
+                          :rules="rules"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-card-text>
 
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeFormDialog">
-                  Cancel
-                </v-btn>
-                <v-btn color="blue darken-1" text @click="save"> Save </v-btn>
-              </v-card-actions>
-            </v-card>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="closeFormDialog">
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    color="blue darken-1"
+                    text
+                    :disabled="!valid"
+                    @click="save"
+                  >
+                    Save
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-form>
           </v-dialog>
-          <v-dialog v-model="confirmationDialog" max-width="500px">
+          <v-dialog
+            v-model="confirmationDialog"
+            max-width="500px"
+            @click:outside="confirmationDialogCancel"
+          >
             <v-card>
               <v-card-title class="text-h5"
                 >Are you sure you want to delete this customer?</v-card-title
@@ -135,6 +159,8 @@ export default defineComponent({
       create,
     } = useCustomer();
 
+    const formRef = ref<HTMLFormElement>();
+    const valid = ref(true);
     const isNewCustomer = ref(true);
     const snack = ref(false);
     const snackColor = ref("");
@@ -152,6 +178,11 @@ export default defineComponent({
     const formTitle = computed(() =>
       isNewCustomer.value ? "New Customer" : "Edit Customer"
     );
+
+    const rules = ref([
+      (value: string) => !!value || "Required.",
+      (value: string) => (value || "").length <= 30 || "Max 30 characters",
+    ]);
 
     const openSnack = (txt: string, color: string) => {
       snack.value = true;
@@ -173,8 +204,10 @@ export default defineComponent({
       confirmationDialog.value = true;
     };
 
-    const closeFormDialog = () => {
+    const closeFormDialog = async () => {
+      await getAll().catch((error) => openSnack(error, "error"));
       formDialog.value = false;
+      formRef.value?.resetValidation();
       nextTick(() => {
         editedCustomer.value = defaultCustomer.value;
         editedIndex.value = -1;
@@ -205,13 +238,7 @@ export default defineComponent({
     };
 
     const save = async () => {
-      if (
-        editedCustomer.value.firstName.length < 1 ||
-        editedCustomer.value.lastName.length < 1
-      ) {
-        openSnack("firstname or lastName cannot be empty", "warning");
-        return;
-      }
+      if (!formRef.value || !formRef.value?.validate()) return;
 
       if (editedIndex.value > -1) {
         await updateCustomer();
@@ -257,10 +284,6 @@ export default defineComponent({
       }
     };
 
-    watch(formDialog, (val) => {
-      val || closeFormDialog();
-    });
-
     watch(confirmationDialog, (val) => {
       val || confirmationDialogCancel();
     });
@@ -270,6 +293,8 @@ export default defineComponent({
     );
 
     return {
+      formRef,
+      valid,
       isNewCustomer,
       snack,
       snackText,
@@ -281,6 +306,7 @@ export default defineComponent({
       customers,
       editedCustomer,
       formTitle,
+      rules,
       edit,
       remove,
       confirmationDialogOk,

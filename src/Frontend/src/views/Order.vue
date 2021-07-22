@@ -24,6 +24,8 @@
             v-model="formDialog"
             max-width="500px"
             :fullscreen="isNewOrder"
+            @keydown.esc="closeFormDialog"
+            @click:outside="closeFormDialog"
           >
             <template v-slot:activator="{ on, attrs }">
               <v-btn
@@ -37,146 +39,160 @@
                 New Order
               </v-btn>
             </template>
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">{{ formTitle }}</span>
-              </v-card-title>
+            <v-form ref="formRef" v-model="valid" lazy-validation>
+              <v-card>
+                <v-card-title>
+                  <span class="text-h5">{{ formTitle }}</span>
+                </v-card-title>
 
-              <v-card-text>
-                <v-container v-if="isNewOrder">
-                  <v-data-table
-                    :headers="orderHeaders"
-                    :items="orderProducts"
-                    :search="search"
-                    sort-by="id"
-                    class="elevation-1"
-                  >
-                    <template v-slot:item.quantity="props">
-                      <v-edit-dialog
-                        :return-value.sync="props.item.quantity"
-                        persistent
-                      >
-                        {{ props.item.quantity }}
-                        <template v-slot:input>
-                          <v-text-field
-                            v-model="props.item.quantity"
-                            type="number"
-                            label="Quantity"
-                            single-line
-                          ></v-text-field>
-                        </template>
-                      </v-edit-dialog>
-                    </template>
-                    <template v-slot:top>
-                      <v-toolbar flat>
-                        <v-toolbar-title>Order product</v-toolbar-title>
-                        <v-divider class="mx-4" inset vertical></v-divider>
-                        <v-spacer></v-spacer>
-                        <v-text-field
-                          v-model="search"
-                          append-icon="mdi-magnify"
-                          label="Search"
-                          single-line
-                          hide-details
-                        ></v-text-field>
-                        <v-spacer></v-spacer>
-                        <v-select
-                          :items="customers"
-                          v-model="customer"
-                          name="firstName"
-                          :item-text="customerName"
-                          item-value="id"
-                          return-object
-                          label="Select customer"
-                          solo
-                          dense
-                          flat
-                          single-line
-                          hide-details
-                        ></v-select>
-                        <v-dialog
-                          v-model="confirmationDialog"
-                          max-width="500px"
-                          :retain-focus="false"
+                <v-card-text>
+                  <v-container v-if="isNewOrder">
+                    <v-data-table
+                      :headers="orderHeaders"
+                      :items="orderProducts"
+                      :search="search"
+                      sort-by="id"
+                      class="elevation-1"
+                    >
+                      <template v-slot:item.quantity="props">
+                        <v-edit-dialog
+                          :return-value.sync="props.item.quantity"
+                          persistent
                         >
-                          <v-card>
-                            <v-card-title class="text-h5"
-                              >Are you sure you want to order this
-                              product?</v-card-title
-                            >
-                            <v-card-actions>
-                              <v-spacer></v-spacer>
-                              <v-btn
-                                color="blue darken-1"
-                                text
-                                @click="closeOrderProduct"
-                                >Cancel</v-btn
+                          {{ props.item.quantity }}
+                          <template v-slot:input>
+                            <v-text-field
+                              v-model="props.item.quantity"
+                              type="number"
+                              label="Quantity"
+                              single-line
+                              :rules="rules"
+                              required
+                            ></v-text-field>
+                          </template>
+                        </v-edit-dialog>
+                      </template>
+                      <template v-slot:top>
+                        <v-toolbar flat>
+                          <v-toolbar-title>Order product</v-toolbar-title>
+                          <v-divider class="mx-4" inset vertical></v-divider>
+                          <v-spacer></v-spacer>
+                          <v-text-field
+                            v-model="search"
+                            append-icon="mdi-magnify"
+                            label="Search"
+                            single-line
+                            hide-details
+                          ></v-text-field>
+                          <v-spacer></v-spacer>
+                          <v-select
+                            :items="customers"
+                            v-model="customer"
+                            name="firstName"
+                            :item-text="customerName"
+                            item-value="id"
+                            return-object
+                            required
+                            label="Select customer"
+                            solo
+                            dense
+                            flat
+                            single-line
+                            hide-details
+                          ></v-select>
+                          <v-dialog
+                            v-model="confirmationDialog"
+                            max-width="500px"
+                            :retain-focus="false"
+                          >
+                            <v-card>
+                              <v-card-title class="text-h5"
+                                >Are you sure you want to order this
+                                product?</v-card-title
                               >
-                              <v-btn
-                                color="blue darken-1"
-                                text
-                                @click="orderProductConfirm"
-                                >OK</v-btn
-                              >
-                              <v-spacer></v-spacer>
-                            </v-card-actions>
-                          </v-card>
-                        </v-dialog>
-                      </v-toolbar>
-                    </template>
-                    <template v-slot:item.buy="{ item }">
-                      <v-icon small @click="orderProduct(item)">
-                        mdi-cart-plus
-                      </v-icon>
-                    </template>
-                  </v-data-table>
-                </v-container>
-                <v-container v-else>
-                  <v-row>
-                    <v-col cols="12" sm="6">
-                      <v-text-field
-                        v-model="editedOrder.id"
-                        readonly
-                        label="Id"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6">
-                      <v-text-field
-                        v-model="editedOrder.productId"
-                        label="Product id"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6">
-                      <v-text-field
-                        v-model="editedOrder.customerId"
-                        label="Customer id"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6">
-                      <v-text-field
-                        v-model="editedOrder.quantity"
-                        label="Quantity"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
+                              <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn
+                                  color="blue darken-1"
+                                  text
+                                  @click="closeOrderProduct"
+                                  >Cancel</v-btn
+                                >
+                                <v-btn
+                                  color="blue darken-1"
+                                  text
+                                  :disabled="!valid"
+                                  @click="orderProductConfirm"
+                                  >OK</v-btn
+                                >
+                                <v-spacer></v-spacer>
+                              </v-card-actions>
+                            </v-card>
+                          </v-dialog>
+                        </v-toolbar>
+                      </template>
+                      <template v-slot:item.buy="{ item }">
+                        <v-icon small @click="orderProduct(item)">
+                          mdi-cart-plus
+                        </v-icon>
+                      </template>
+                    </v-data-table>
+                  </v-container>
+                  <v-container v-else>
+                    <v-row>
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                          v-model="editedOrder.id"
+                          readonly
+                          required
+                          label="Id"
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                          v-model="editedOrder.productId"
+                          label="Product id"
+                          :rules="rules"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                          v-model="editedOrder.customerId"
+                          label="Customer id"
+                          :rules="rules"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                          v-model="editedOrder.quantity"
+                          label="Quantity"
+                          :rules="rules"
+                          required
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-card-text>
 
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeFormDialog">
-                  Cancel
-                </v-btn>
-                <v-btn
-                  v-show="!isNewOrder"
-                  color="blue darken-1"
-                  text
-                  @click="save"
-                >
-                  Save
-                </v-btn>
-              </v-card-actions>
-            </v-card>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="closeFormDialog">
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    v-show="!isNewOrder"
+                    color="blue darken-1"
+                    text
+                    :disabled="!valid"
+                    @click="save"
+                  >
+                    Save
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-form>
           </v-dialog>
           <v-dialog v-model="confirmationDialog" max-width="500px">
             <v-card>
@@ -191,7 +207,11 @@
                   @click="confirmationDialogCancel"
                   >Cancel</v-btn
                 >
-                <v-btn color="blue darken-1" text @click="confirmationDialogOk"
+                <v-btn
+                  color="blue darken-1"
+                  text
+                  :disabled="!valid"
+                  @click="confirmationDialogOk"
                   >OK</v-btn
                 >
                 <v-spacer></v-spacer>
@@ -249,6 +269,13 @@ export default defineComponent({
     } = useOrder();
     const { customers, getAll: getAllCustomers } = useCustomer();
 
+    const rules = ref([
+      (value: number) => !!value || "Required.",
+      (value: number) => (value || 0) > 0 || "Min 1",
+    ]);
+
+    const formRef = ref<HTMLFormElement>();
+    const valid = ref(true);
     const isNewOrder = ref(true);
     const snack = ref(false);
     const snackColor = ref("");
@@ -307,6 +334,7 @@ export default defineComponent({
     const closeFormDialog = async () => {
       await getAll().catch((error) => openSnack(error, "error"));
       formDialog.value = false;
+      formRef.value?.resetValidation();
       nextTick(() => {
         editedOrder.value = defaultOrder.value;
         editedIndex.value = -1;
@@ -337,17 +365,7 @@ export default defineComponent({
     };
 
     const save = async () => {
-      if (
-        editedOrder.value.customerId < 1 ||
-        editedOrder.value.productId < 1 ||
-        editedOrder.value.quantity < 1
-      ) {
-        openSnack(
-          "customerId, productId or quantity cannot be empty",
-          "warning"
-        );
-        return;
-      }
+      if (!formRef.value || !formRef.value?.validate()) return;
 
       if (editedIndex.value > -1) {
         await updateOrder();
@@ -434,9 +452,9 @@ export default defineComponent({
       await createOrder();
     };
 
-    watch(formDialog, (val) => {
-      val || closeFormDialog();
-    });
+    // watch(formDialog, (val) => {
+    //   val || closeFormDialog();
+    // });
 
     watch(confirmationDialog, (val) => {
       val || confirmationDialogCancel();
@@ -456,6 +474,8 @@ export default defineComponent({
     );
 
     return {
+      // formRef,
+      valid,
       isNewOrder,
       snack,
       snackText,
@@ -467,6 +487,7 @@ export default defineComponent({
       orders,
       editedOrder,
       formTitle,
+      rules,
       edit,
       remove,
       confirmationDialogOk,
