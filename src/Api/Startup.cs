@@ -1,8 +1,14 @@
+using System.Linq;
+using System.Net.Mime;
+using System.Text.Json;
 using Application.Common;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 
@@ -31,11 +37,16 @@ namespace Api
 			services.AddMyContext(Configuration);
 
 			services.AddOptions();
-			services.AddControllers(options =>
-			{
-				options.SuppressAsyncSuffixInActionNames = false;
-			});
+			services.AddControllers(options => { options.SuppressAsyncSuffixInActionNames = false; });
 			services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "Api", Version = "v1"}); });
+
+			services.AddHealthChecks()
+				.AddSqlServer(
+					Configuration.GetConnectionString("DefaultConnection"),
+					"SELECT 1;",
+					"sql",
+					HealthStatus.Degraded,
+					new[] {"db", "sql", "sqlserver", "ready"});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,7 +65,38 @@ namespace Api
 
 			app.UseAuthorization();
 
-			app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapControllers();
+
+				endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
+				{
+					Predicate = (check) => check.Tags.Contains("ready"),
+					ResponseWriter = async (context, report) =>
+					{
+						var result = JsonSerializer.Serialize(
+							new
+							{
+								status = report.Status.ToString(),
+								checks = report.Entries.Select(entry => new
+								{
+									name = entry.Key,
+									status = entry.Value.Status.ToString(),
+									exception = entry.Value.Exception != null ? entry.Value.Exception.Message : "none",
+									duration = entry.Value.Duration.ToString()
+								})
+							}
+						);
+
+						context.Response.ContentType = MediaTypeNames.Application.Json;
+						await context.Response.WriteAsync(result);
+					}
+				});
+				endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
+				{
+					Predicate = (_) => false
+				});
+			});
 		}
 	}
 }
