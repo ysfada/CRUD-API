@@ -1,24 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Application.Products.Commands;
 using Application.Products.Model;
+using Application.Products.Queries;
 using Microsoft.AspNetCore.Mvc;
-using Application.Products.Services;
+using MediatR;
 
 namespace Api.Controllers
 {
 	public class ProductController : BaseController
 	{
-		private readonly IProductService _productService;
+		private readonly IMediator _mediator;
 
-		public ProductController(IProductService productService)
+		public ProductController(IMediator mediator)
 		{
-			_productService = productService;
+			_mediator = mediator;
 		}
 
 		[HttpGet("{id:int}")]
-		public async Task<ActionResult<ProductDto>> GetProductAsync([FromQuery(Name = "isActive")] short? isActive, int id)
+		public async Task<ActionResult<ProductDto>> GetProductAsync(int id, short? isActive)
 		{
-			var data = await _productService.GetProductAsync(id, isActive);
+			var data = await _mediator.Send(new GetProductQuery(id, isActive));
 			if (data is null)
 			{
 				return NotFound();
@@ -30,21 +32,21 @@ namespace Api.Controllers
 		[HttpGet]
 		public async Task<IEnumerable<ProductDto>> GetProductsAsync([FromQuery(Name = "isActive")] short? isActive)
 		{
-			return await _productService.GetProductsAsync(isActive);
+			return await _mediator.Send(new GetProductsQuery(isActive));
 		}
 
 		[HttpPost]
 		public async Task<ActionResult<ProductDto>> CreateProductAsync(CreateProductDto createProductDto)
 		{
-			var product = await _productService.CreateProductAsync(createProductDto);
+			var product = await _mediator.Send(new CreateProductCommand(createProductDto));
 
-			return CreatedAtAction(nameof(GetProductAsync), new { id = product.Id }, product);
+			return CreatedAtAction(nameof(GetProductAsync), new {id = product.Id}, product);
 		}
 
 		[HttpPut("{id:int}")]
 		public async Task<IActionResult> UpdateProductAsync(int id, UpdateProductDto updateProductDto)
 		{
-			var existingProduct = await _productService.GetProductAsync(id);
+			var existingProduct = await _mediator.Send(new GetProductQuery(id));
 
 			if (existingProduct is null)
 			{
@@ -58,7 +60,7 @@ namespace Api.Controllers
 				IsActive = updateProductDto.IsActive,
 			};
 
-			await _productService.UpdateProductAsync(updatedProduct);
+			await _mediator.Send(new UpdateProductCommand(updatedProduct));
 
 			return NoContent();
 		}
@@ -66,14 +68,14 @@ namespace Api.Controllers
 		[HttpDelete("{id:int}")]
 		public async Task<IActionResult> DeleteProductAsync(int id)
 		{
-			var existingProduct = await _productService.GetProductAsync(id);
+			var existingProduct = await _mediator.Send(new GetProductQuery(id));
 
 			if (existingProduct is null)
 			{
 				return NotFound();
 			}
 
-			await _productService.DeleteProductAsync(id);
+			await _mediator.Send(new DeleteProductCommand(id));
 
 			return NoContent();
 		}

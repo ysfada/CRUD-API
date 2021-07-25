@@ -1,24 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Application.Orders.Commands;
 using Application.Orders.Model;
+using Application.Orders.Queries;
 using Microsoft.AspNetCore.Mvc;
-using Application.Orders.Services;
+using MediatR;
 
 namespace Api.Controllers
 {
 	public class OrderController : BaseController
 	{
-		private readonly IOrderService _orderService;
+		private readonly IMediator _mediator;
 
-		public OrderController(IOrderService orderService)
+		public OrderController(IMediator mediator)
 		{
-			_orderService = orderService;
+			_mediator = mediator;
 		}
 
 		[HttpGet("{id:int}")]
 		public async Task<ActionResult<OrderDto>> GetOrderAsync(int id)
 		{
-			var data = await _orderService.GetOrderAsync(id);
+			var data = await _mediator.Send(new GetOrderQuery(id));
 			if (data is null)
 			{
 				return NotFound();
@@ -30,21 +32,21 @@ namespace Api.Controllers
 		[HttpGet]
 		public async Task<IEnumerable<OrderDto>> GetOrdersAsync([FromQuery(Name = "isActive")] short? isActive)
 		{
-			return await _orderService.GetOrdersAsync(isActive);
+			return await _mediator.Send(new GetOrdersQuery(isActive));
 		}
 
 		[HttpPost]
 		public async Task<ActionResult<OrderDto>> CreateOrderAsync(CreateOrderDto createOrderDto)
 		{
-			var order = await _orderService.CreateOrderAsync(createOrderDto);
+			var order = await _mediator.Send(new CreateOrderCommand(createOrderDto));
 
-			return CreatedAtAction(nameof(GetOrderAsync), new { id = order.Id }, order);
+			return CreatedAtAction(nameof(GetOrderAsync), new {id = order.Id}, order);
 		}
 
 		[HttpPut("{id:int}")]
 		public async Task<IActionResult> UpdateOrderAsync(int id, UpdateOrderDto updateOrderDto)
 		{
-			var existingOrder = await _orderService.GetOrderAsync(id);
+			var existingOrder = await _mediator.Send(new GetOrderQuery(id));
 
 			if (existingOrder is null)
 			{
@@ -58,7 +60,7 @@ namespace Api.Controllers
 				Quantity = updateOrderDto.Quantity,
 			};
 
-			await _orderService.UpdateOrderAsync(updatedOrder);
+			await _mediator.Send(new UpdateOrderCommand(updatedOrder));
 
 			return NoContent();
 		}
@@ -66,14 +68,14 @@ namespace Api.Controllers
 		[HttpDelete("{id:int}")]
 		public async Task<IActionResult> DeleteOrder(int id)
 		{
-			var existingOrder = await _orderService.GetOrderAsync(id);
+			var existingOrder = await _mediator.Send(new GetOrderQuery(id));
 
 			if (existingOrder is null)
 			{
 				return NotFound();
 			}
 
-			await _orderService.DeleteOrderAsync(id);
+			await _mediator.Send(new DeleteOrderCommand(id));
 
 			return NoContent();
 		}

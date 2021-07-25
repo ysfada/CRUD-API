@@ -1,7 +1,9 @@
 using System.Linq;
 using System.Net.Mime;
 using System.Text.Json;
+using Application;
 using Application.Common;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -35,6 +37,7 @@ namespace Api
 
 			services.InjectApplicationServices();
 			services.AddMyContext(Configuration);
+			services.AddMediatR();
 
 			services.AddOptions();
 			services.AddControllers(options => { options.SuppressAsyncSuffixInActionNames = false; });

@@ -3,6 +3,7 @@ using Application.Orders.Services;
 using Application.Products.Services;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.EntityFramework;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ namespace Application.Common
 			services.AddScoped<ICustomerService, CustomerService>();
 			services.AddScoped<IProductService, ProductService>();
 			services.AddScoped<IOrderService, OrderService>();
+
 			return services;
 		}
 
@@ -35,6 +37,11 @@ namespace Application.Common
 						b => b.MigrationsAssembly("Infrastructure")));
 
 			return services;
+		}
+
+		public static void AddMediatR(this IServiceCollection services)
+		{
+			services.AddMediatR(typeof(MediatREntrypoint).Assembly);
 		}
 	}
 }
