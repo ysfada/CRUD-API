@@ -41,7 +41,7 @@ namespace Application.Common
 
 		public static void AddMediatR(this IServiceCollection services)
 		{
-			services.AddMediatR(typeof(MediatREntrypoint).Assembly);
+			services.AddMediatR(typeof(ApplicationEntrypoint).Assembly);
 		}
 
 		public static void AddAutoMapperProfiles(this IServiceCollection services)

@@ -1,7 +1,9 @@
 using System.Linq;
 using System.Net.Mime;
 using System.Text.Json;
+using Application;
 using Application.Common;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -41,6 +43,10 @@ namespace Api
 			services.AddOptions();
 			services.AddControllers(options => { options.SuppressAsyncSuffixInActionNames = false; });
 			services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "Api", Version = "v1"}); });
+			services.AddMvc(options => { options.Filters.Add(new ValidationFilter()); }).AddFluentValidation(options =>
+			{
+				options.RegisterValidatorsFromAssemblyContaining<ApplicationEntrypoint>();
+			});
 
 			services.AddHealthChecks()
 				.AddSqlServer(
