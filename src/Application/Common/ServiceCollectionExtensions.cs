@@ -43,5 +43,10 @@ namespace Application.Common
 		{
 			services.AddMediatR(typeof(MediatREntrypoint).Assembly);
 		}
+
+		public static void AddAutoMapperProfiles(this IServiceCollection services)
+		{
+			services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+		}
 	}
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Orders.Model;
+using AutoMapper;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,12 @@ namespace Application.Orders.Services
 	public class OrderService : IOrderService
 	{
 		private readonly IRepository<Order> _orderRepository;
+		private readonly IMapper _mapper;
 
-		public OrderService(IRepository<Order> orderRepository)
+		public OrderService(IRepository<Order> orderRepository, IMapper mapper)
 		{
 			_orderRepository = orderRepository;
+			_mapper = mapper;
 		}
 
 		public async Task<OrderDto> GetOrderAsync(int id, short? isActive = null)
@@ -24,7 +27,9 @@ namespace Application.Orders.Services
 				.Include(o => o.Customer)
 				.Include(o => o.Product)
 				.FirstOrDefaultAsync(c => c.Id == id && c.IsActive == 1);
-			return order?.AsDto();
+
+			var orderDto = _mapper.Map<OrderDto>(order);
+			return orderDto;
 		}
 
 		public async Task<IEnumerable<OrderDto>> GetOrdersAsync(short? isActive = null)
@@ -34,26 +39,32 @@ namespace Application.Orders.Services
 			{
 				q = q.Where(order => order.IsActive == isActive);
 			}
-			var orders = q
+
+			var orders = await q
 				.Include(o => o.Customer)
 				.Include(o => o.Product)
-				.Select(order => order.AsDto());
+				.ToListAsync();
 
-			return await orders.ToListAsync();
+			var ordersDto = _mapper.Map<IEnumerable<OrderDto>>(orders);
+			return ordersDto;
 		}
 
 		public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createOrderDto)
 		{
-			var newOrder = _orderRepository.InsertWithoutCommit(createOrderDto.AsOrder());
+			var createOrder = _mapper.Map<Order>(createOrderDto);
+			var newOrder = _orderRepository.InsertWithoutCommit(createOrder);
 
 			await _orderRepository.CommitAsync(CancellationToken.None);
 
-			return newOrder.AsDto();
+			var orderDto = _mapper.Map<OrderDto>(newOrder);
+			return orderDto;
 		}
 
 		public async Task UpdateOrderAsync(OrderDto orderDto)
 		{
-			_orderRepository.UpdateWithoutCommit(orderDto.AsOrder());
+			var order = _mapper.Map<Order>(orderDto);
+
+			_orderRepository.UpdateWithoutCommit(order);
 			await _orderRepository.CommitAsync(CancellationToken.None);
 		}
 
