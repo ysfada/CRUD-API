@@ -1,13 +1,5 @@
 ﻿namespace Application.Customers.Model
 {
 	// Automapperda kullandığımız Data Transfer Object 
-	public record CustomerDto
-	{
-		public int Id { get; set; }
-		public string FirstName { get; set; }
-		public string LastName { get; set; }
-		public string ExternalId { get; set; }
-
-		public short IsActive { get; set; }
-	}
+	public record CustomerDto(int Id, string FirstName, string LastName, string ExternalId, short IsActive);
 }

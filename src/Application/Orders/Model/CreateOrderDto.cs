@@ -1,11 +1,4 @@
 ﻿namespace Application.Orders.Model
 {
-	public record CreateOrderDto
-	{
-		public int CustomerId { get; set; }
-
-		public int ProductId { get; set; }
-
-		public int Quantity { get; set; }
-	}
+	public record CreateOrderDto(int CustomerId, int ProductId, int Quantity);
 }
